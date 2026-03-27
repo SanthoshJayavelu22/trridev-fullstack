@@ -25,3 +25,12 @@ export const getImgUrl = (path) => {
   
   return `${backendBaseUrl}${normalizedPath}`;
 };
+
+/**
+ * Helper to check if a URL is from the local development server
+ * Used to intelligently set unoptimized={true} in dev to avoid 400 errors
+ */
+export const isLocalImage = (url) => {
+  if (!url) return false;
+  return url.includes('localhost') || url.includes('127.0.0.1');
+};

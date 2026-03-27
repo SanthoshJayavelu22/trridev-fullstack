@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -151,7 +151,7 @@ const BlogDetails = () => {
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Published On</p>
-                <p className="text-sm font-bold text-black">{new Date(blog.publishedDate || blog.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
+                <p className="text-sm font-bold text-black" suppressHydrationWarning>{new Date(blog.publishedDate || blog.createdAt).toLocaleDateString(undefined, { dateStyle: 'long' })}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">

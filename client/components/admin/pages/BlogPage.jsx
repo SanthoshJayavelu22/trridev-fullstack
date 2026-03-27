@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import ReactDOM from 'react-dom';
 if (typeof window !== 'undefined' && !ReactDOM.findDOMNode) {
@@ -40,8 +40,8 @@ import {
   Zap
 } from "lucide-react";
 import dynamic from 'next/dynamic';
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import "react-quill/dist/quill.snow.css";
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+import "react-quill-new/dist/quill.snow.css";
 import { Toast, DeleteModal, SuccessModal, Pagination } from '@/components/admin/ui';
 import { blogService } from '@/components/admin/services/blog.service';
 
@@ -107,13 +107,15 @@ const BlogPage = () => {
 
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+  const [modalTitle, setModalTitle] = useState("Success!");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [blogToDelete, setBlogToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const [expandedSections, setExpandedSections] = useState({
     basic: true,
@@ -221,12 +223,20 @@ const BlogPage = () => {
         await blogService.create(formData);
       }
 
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage(editingId ? "Article successfully reformulated." : "New research published.");
       fetchBlogs();
       clearForm();
       setShowSuccessModal(true);
     } catch (err) {
-      setError(err.response?.data?.message || "Protocol error: Submission failed.");
+      console.error("Submission Error:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Internal server error";
+      setModalType("error");
+      setModalTitle("Protocol Interrupted");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -264,10 +274,17 @@ const BlogPage = () => {
       if (editingId === blogToDelete) clearForm();
       setShowDeleteModal(false);
       setBlogToDelete(null);
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage("Blog article deleted successfully!");
       setShowSuccessModal(true);
     } catch (err) {
-      setError("Failed to delete blog.");
+      const msg = err.response?.data?.error || err.response?.data?.message || "Failed to delete blog.";
+      setModalType("error");
+      setModalTitle("Operation Failed");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
       setShowDeleteModal(false);
     }
   };
@@ -300,8 +317,9 @@ const BlogPage = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Success!"
+        title={modalTitle}
         message={successMessage}
+        type={modalType}
       />
 
       {showForm ? (
@@ -408,12 +426,21 @@ const BlogPage = () => {
                                 <Upload size={32} />
                               </div>
                               <p className="text-sm font-black text-black uppercase tracking-widest">Deploy Visual Asset</p>
-                              <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Recommended: 2000 x 850px</p>
+                              <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Recommended: 2000 x 850px | Allowed: jpeg, png, webp, gif</p>
                             </div>
                           )}
-                          <input type="file" id="featuredImage" accept="image/*" onChange={(e) => {
+                          <input type="file" id="featuredImage" accept=".jpg,.jpeg,.png,.gif,.webp" onChange={(e) => {
                             const file = e.target.files[0];
                             if (file) {
+                              const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+                              if (!allowedTypes.includes(file.type)) {
+                                setModalType("error");
+                                setModalTitle("Invalid Format");
+                                setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+                                setShowSuccessModal(true);
+                                e.target.value = ""; // Clear the selection
+                                return;
+                              }
                               const reader = new FileReader();
                               reader.onloadend = () => setNewBlog(p => ({ ...p, featuredImage: file, featuredImagePreview: reader.result }));
                               reader.readAsDataURL(file);
@@ -639,7 +666,7 @@ const BlogPage = () => {
                         <div className="absolute top-6 left-6"><span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur-md ring-1 ring-white/20 ${blog.isPublished ? 'bg-emerald-500/90 text-white' : 'bg-amber-500/90 text-white'}`}>{blog.isPublished ? 'Live' : 'Draft'}</span></div>
                       </div>
                       <div className="p-8 flex-1 flex flex-col">
-                        <div className="flex items-center gap-2 mb-4"><Clock size={14} className="text-red-600" /><span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{new Date(blog.createdAt).toLocaleDateString()}</span></div>
+                        <div className="flex items-center gap-2 mb-4"><Clock size={14} className="text-red-600" /><span className="text-[10px] font-black uppercase tracking-widest text-slate-400" suppressHydrationWarning>{new Date(blog.createdAt).toLocaleDateString()}</span></div>
                         <h3 className="text-xl font-black text-black mb-4 line-clamp-2 leading-tight tracking-tight group-hover:text-red-600 transition-colors">{blog.cardTitle || blog.title}</h3>
                         <p className="text-sm font-medium text-slate-500 mb-8 line-clamp-3 leading-relaxed">{blog.metaDescription || "No overview provided for this entry."}</p>
                         <div className="mt-auto pt-6 border-t border-slate-50 flex items-center justify-between">

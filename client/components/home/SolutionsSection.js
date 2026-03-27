@@ -8,7 +8,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { serviceService } from '@/services/service.service';
 import SectionLoader from '@/components/common/SectionLoader';
 import { Box } from 'lucide-react';
-import { getImgUrl } from '@/utils/image-url';
+import { getImgUrl, isLocalImage } from '@/utils/image-url';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -36,11 +36,11 @@ function ReyndersCard({ service, isActive, isAnyActive, onHover }) {
       }`}>
          <Image 
            src={getImgUrl(service.cardImage) || getImgUrl(service.heroImage) || "https://i.pinimg.com/1200x/28/69/48/286948c062ac9bd2c97422fef9fa527c.jpg"} 
-           alt={service.title}
+           alt={service.title || "Tridev Label Solution"}
            fill
            loading="lazy"
-           unoptimized={true}
-           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 800px"
+           unoptimized={isLocalImage(getImgUrl(service.cardImage) || getImgUrl(service.heroImage) || "")}
+           sizes="(max-width: 640px) 400px, (max-width: 1024px) 50vw, 400px"
            className="object-cover transition-opacity duration-500"
          />
       </div>
@@ -111,38 +111,52 @@ export default function SolutionsSection() {
   }, []);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-       gsap.fromTo(containerRef.current, 
-          { y: 50, opacity: 0 },
-          {
-            y: 0, 
-            opacity: 1, 
-            duration: 1.2, 
-            ease: "power4.out",
-            scrollTrigger: {
-               trigger: containerRef.current,
-               start: "top 95%",
-               toggleActions: "play none none none"
-            },
-            clearProps: "all"
-          }
-       );
-       
-       if(headerRef.current) {
-         gsap.from(headerRef.current.children, {
-            y: 40,
-            opacity: 0,
-            duration: 1,
-            stagger: 0.15,
-            ease: "power3.out",
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: "top 85%"
-            }
-         });
-       }
-    });
-    return () => ctx.revert();
+    // Viewport-based lazy initialization for elite TBT
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        const ctx = gsap.context(() => {
+           gsap.fromTo(containerRef.current, 
+              { y: 50, opacity: 0 },
+              {
+                y: 0, 
+                opacity: 1, 
+                duration: 1.2, 
+                ease: "power4.out",
+                scrollTrigger: {
+                   trigger: containerRef.current,
+                   start: "top 95%",
+                   toggleActions: "play none none none"
+                },
+                clearProps: "all"
+              }
+           );
+           
+           if(headerRef.current) {
+             gsap.from(headerRef.current.children, {
+                y: 40,
+                opacity: 0,
+                duration: 1,
+                stagger: 0.15,
+                ease: "power3.out",
+                scrollTrigger: {
+                  trigger: headerRef.current,
+                  start: "top 85%"
+                }
+             });
+           }
+        }, containerRef);
+        
+        window._solutionsCtx = ctx;
+        observer.disconnect();
+      }
+    }, { rootMargin: "200px" });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+
+    return () => {
+      if (window._solutionsCtx) window._solutionsCtx.revert();
+      observer.disconnect();
+    };
   }, []);
 
   // Split dynamic solutions into rows of 3

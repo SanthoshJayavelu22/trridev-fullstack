@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { getImgUrl } from '@/utils/image-url';
+import LazyRender from '../common/LazyRender';
 import FinishesGallery from '../home/FinishesGallery';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -30,42 +31,48 @@ export default function CapabilitiesPageContent({ galleryItems = [] }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Robust reveal for every element individually
-      gsap.utils.toArray('.reveal').forEach((el) => {
-        gsap.from(el, {
-          y: 40,
-          opacity: 0,
-          duration: 1,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: el,
-            start: "top 95%",
-            toggleActions: "play none none none"
-          }
+    // 1200ms Performant Buffer: Delay engine startup to secure LCP & TBT
+    const timer = setTimeout(() => {
+      const ctx = gsap.context(() => {
+        // Strict Scroll-Aware Reveal Engine
+        gsap.utils.toArray('.reveal').forEach((el) => {
+          gsap.from(el, {
+            y: 40,
+            opacity: 0,
+            duration: 1,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: el,
+              start: "top 95%",
+              toggleActions: "play none none none",
+              fastScrollEnd: true,
+              preventOverlaps: true,
+            }
+          });
         });
-      });
 
-      // Technical Line Animations
-      gsap.utils.toArray('.tech-line').forEach((line) => {
-        gsap.from(line, {
-          scaleX: 0,
-          duration: 1.5,
-          ease: "expo.inOut",
-          scrollTrigger: {
-            trigger: line,
-            start: "top 95%",
-          }
+        // Technical Line Animations
+        gsap.utils.toArray('.tech-line').forEach((line) => {
+          gsap.from(line, {
+            scaleX: 0,
+            duration: 1.5,
+            ease: "expo.inOut",
+            scrollTrigger: {
+              trigger: line,
+              start: "top 95%",
+              fastScrollEnd: true,
+            }
+          });
         });
-      });
-    }, containerRef);
+      }, containerRef);
 
-    // Refresh triggers once images and layouts settle
-    const timer = setTimeout(() => ScrollTrigger.refresh(), 1000);
+      window._capCtx = ctx;
+      ScrollTrigger.refresh();
+    }, 1200);
     
     return () => {
       clearTimeout(timer);
-      ctx.revert();
+      if (window._capCtx) window._capCtx.revert();
     };
   }, []);
 
@@ -130,12 +137,13 @@ export default function CapabilitiesPageContent({ galleryItems = [] }) {
                 key={i} 
                 className="reveal group relative flex-1 hover:flex-[6] transition-all duration-700 ease-[cubic-bezier(0.25,1,0.3,1)] overflow-hidden rounded-[2.5rem] border border-white/10 cursor-pointer"
               >
-                {/* Image Layer */}
                 <Image 
                   src={item.image} 
                   alt={item.title} 
                   fill 
                   className="object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 scale-105 group-hover:scale-100"
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  priority={i === 0}
                 />
                 
                 {/* Overlays */}
@@ -213,6 +221,7 @@ export default function CapabilitiesPageContent({ galleryItems = [] }) {
             alt="Flexo Industrial Background" 
             fill 
             className="object-cover"
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-black/70"></div>
         </div>
@@ -445,302 +454,310 @@ export default function CapabilitiesPageContent({ galleryItems = [] }) {
 
 
       {/* 4. Specialty & Security Labels - Premium Engineering Portfolio */}
-      <section className="relative mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-white relative overflow-hidden">
-        <div className="container mx-auto px-6 md:px-12 relative z-10">
-          
-          {/* Section Header - Site Signature */}
-          <div className="max-w-4xl mx-auto text-center mb-24 reveal">
-             <div className="inline-flex items-center gap-4 mb-6">
-                <div className="w-12 h-px bg-[#E32219]"></div>
-                <span className="text-xs font-bold uppercase tracking-[0.4em] text-[#E32219]">Security Engineering</span>
-                <div className="w-12 h-px bg-[#E32219]"></div>
-             </div>
-             <h2 className="text-5xl md:text-7xl lg:text-8xl font-light tracking-tighter text-gray-900 leading-none">
-                Specialty & <br />
-                <span className="font-normal text-[#E32219]">Security Solutions.</span>
-             </h2>
-             <p className="mt-8 text-gray-500 font-light text-xl md:text-2xl max-w-3xl mx-auto">
-                Engineered finishes and high-authentication units designed for specialized global sectors, ensuring brand protection and regulatory compliance.
-             </p>
-          </div>
+      <LazyRender minHeight="800px">
+        <section className="relative mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-white overflow-hidden">
+          <div className="container mx-auto px-6 md:px-12 relative z-10">
+            
+            {/* Section Header - Site Signature */}
+            <div className="max-w-4xl mx-auto text-center mb-24 reveal">
+               <div className="inline-flex items-center gap-4 mb-6">
+                  <div className="w-12 h-px bg-[#E32219]"></div>
+                  <span className="text-xs font-bold uppercase tracking-[0.4em] text-[#E32219]">Security Engineering</span>
+                  <div className="w-12 h-px bg-[#E32219]"></div>
+               </div>
+               <h2 className="text-5xl md:text-7xl lg:text-8xl font-light tracking-tighter text-gray-900 leading-none">
+                  Specialty & <br />
+                  <span className="font-normal text-[#E32219]">Security Solutions.</span>
+               </h2>
+               <p className="mt-8 text-gray-500 font-light text-xl md:text-2xl max-w-3xl mx-auto">
+                  Engineered finishes and high-authentication units designed for specialized global sectors, ensuring brand protection and regulatory compliance.
+               </p>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14">
-            {[
-              {
-                id: "01",
-                title: "In-Mould Labels",
-                desc: "Our IML units allow for the permanent integration of branding into the structural polymer of the container. This eliminates label peeling, provides total moisture resistance, and ensures a seamless, premium finish that is fully recyclable with the container body.",
-                tag: "Industrial Grade",
-                img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200",
-                specs: { App: "Auto / Industrial", Life: "10+ Years", Resistance: "Total Fusion" }
-              },
-              {
-                id: "02",
-                title: "Cross Over Labels",
-                desc: "Designed for the global pharmaceutical sector, these multi-layer constructions provide up to 8 printable panels. Essential for multi-lingual regulatory compliance, they offer a compact solution that maximizes data density without increasing packaging size.",
-                tag: "High Information",
-                img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=1200",
-                specs: { Panels: "Up to 8 Views", App: "Pharma / Medical", Std: "GDP Compliance" }
-              },
-              {
-                id: "03",
-                title: "Adhesive Side Print",
-                desc: "A critical covert security measure where high-fidelity serialization is printed on the adhesive layer. This data remains invisible until the label is breached, serving as an irrefutable forensic indicator of product authenticity and tamper history.",
-                tag: "Covert Protection",
-                img: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&q=80&w=1200",
-                specs: { Type: "Tamper Evidence", View: "Adhesive Secret", Security: "Forensic" }
-              },
-              {
-                id: "04",
-                title: "Cold Foiling",
-                desc: "Achieve high-luster metallic effects without the thermal overhead of traditional stamping. Our cold-foiling process enables precision application of gold and silver at full production speed, delivering a luxury aesthetic with zero substrate distortion.",
-                tag: "Premium Finish",
-                img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&q=80&w=1200",
-                specs: { Colors: "Gold / Silver", Process: "Zero-Heat", Sector: "Luxury Brands" }
-              },
-              {
-                id: "05",
-                title: "Hologram Solutions",
-                desc: "Integrated optical variable devices (OVD) featuring multi-level security hierarchies. From overt color shifts for consumer verification to covert micro-text for forensic auditing, our holograms provide a universal defense against high-tier counterfeits.",
-                tag: "Anti-Counterfeit",
-                img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200",
-                specs: { Tech: "3-Level Auth", Verify: "Optical Sync", Std: "ISO 12931" }
-              },
-              {
-                id: "06",
-                title: "Technical Material",
-                desc: "Engineered substrates developed for extreme industrial and medical environments. These materials are certified for chemical solvent resistance, cryogenic storage, and high-pressure sterilization, ensuring data longevity under aggressive stressors.",
-                tag: "Compliance Core",
-                img: "https://images.unsplash.com/photo-1532187875605-2fe358a71e68?auto=format&fit=crop&q=80&w=1200",
-                specs: { Adhesion: "14N Precision", Certs: "GMP Certified", Temp: "Ex-Industrial" }
-              }
-            ].map((card, i) => (
-              <div key={i} className="reveal group relative flex flex-col bg-gray-50/30 rounded-[3rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-700">
-                 
-                 {/* Top Image Container - Focus on Zoom */}
-                 <div className="h-64 relative overflow-hidden">
-                    <Image src={card.img} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" alt={card.title} />
-                    <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-transparent"></div>
-                    <div className="absolute top-8 left-8">
-                       <span className="px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-bold text-gray-900 uppercase tracking-widest border border-white/20">
-                          {card.tag}
-                       </span>
-                    </div>
-                 </div>
-
-                 {/* Bottom Content Container - Focus on Visibility & Depth */}
-                 <div className="flex-1 p-10 bg-white flex flex-col justify-between">
-                    <div>
-                      <div className="flex justify-between items-baseline mb-6">
-                         <h3 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                            {card.title.split(' ').map((word, idx) => (
-                              <span key={idx} className={idx === card.title.split(' ').length - 1 ? "font-semibold italic text-[#E32219]" : ""}>{word} </span>
-                            ))}
-                         </h3>
-                         <span className="text-lg font-black text-gray-100 uppercase leading-none">
-                            {card.id}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-14">
+              {[
+                {
+                  id: "01",
+                  title: "In-Mould Labels",
+                  desc: "Our IML units allow for the permanent integration of branding into the structural polymer of the container. This eliminates label peeling, provides total moisture resistance, and ensures a seamless, premium finish that is fully recyclable with the container body.",
+                  tag: "Industrial Grade",
+                  img: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200",
+                  specs: { App: "Auto / Industrial", Life: "10+ Years", Resistance: "Total Fusion" }
+                },
+                {
+                  id: "02",
+                  title: "Cross Over Labels",
+                  desc: "Designed for the global pharmaceutical sector, these multi-layer constructions provide up to 8 printable panels. Essential for multi-lingual regulatory compliance, they offer a compact solution that maximizes data density without increasing packaging size.",
+                  tag: "High Information",
+                  img: "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?auto=format&fit=crop&q=80&w=1200",
+                  specs: { Panels: "Up to 8 Views", App: "Pharma / Medical", Std: "GDP Compliance" }
+                },
+                {
+                  id: "03",
+                  title: "Adhesive Side Print",
+                  desc: "A critical covert security measure where high-fidelity serialization is printed on the adhesive layer. This data remains invisible until the label is breached, serving as an irrefutable forensic indicator of product authenticity and tamper history.",
+                  tag: "Covert Protection",
+                  img: "https://images.unsplash.com/photo-1605810230434-7631ac76ec81?auto=format&fit=crop&q=80&w=1200",
+                  specs: { Type: "Tamper Evidence", View: "Adhesive Secret", Security: "Forensic" }
+                },
+                {
+                  id: "04",
+                  title: "Cold Foiling",
+                  desc: "Achieve high-luster metallic effects without the thermal overhead of traditional stamping. Our cold-foiling process enables precision application of gold and silver at full production speed, delivering a luxury aesthetic with zero substrate distortion.",
+                  tag: "Premium Finish",
+                  img: "https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&q=80&w=1200",
+                  specs: { Colors: "Gold / Silver", Process: "Zero-Heat", Sector: "Luxury Brands" }
+                },
+                {
+                  id: "05",
+                  title: "Hologram Solutions",
+                  desc: "Integrated optical variable devices (OVD) featuring multi-level security hierarchies. From overt color shifts for consumer verification to covert micro-text for forensic auditing, our holograms provide a universal defense against high-tier counterfeits.",
+                  tag: "Anti-Counterfeit",
+                  img: "https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&q=80&w=1200",
+                  specs: { Tech: "3-Level Auth", Verify: "Optical Sync", Std: "ISO 12931" }
+                },
+                {
+                  id: "06",
+                  title: "Technical Material",
+                  desc: "Engineered substrates developed for extreme industrial and medical environments. These materials are certified for chemical solvent resistance, cryogenic storage, and high-pressure sterilization, ensuring data longevity under aggressive stressors.",
+                  tag: "Compliance Core",
+                  img: "https://images.unsplash.com/photo-1532187875605-2fe358a71e68?auto=format&fit=crop&q=80&w=1200",
+                  specs: { Adhesion: "14N Precision", Certs: "GMP Certified", Temp: "Ex-Industrial" }
+                }
+              ].map((card, i) => (
+                <div key={i} className="reveal group relative flex flex-col bg-gray-50/30 rounded-[3rem] border border-gray-100 overflow-hidden hover:shadow-2xl hover:shadow-gray-200/50 transition-all duration-700">
+                   
+                   {/* Top Image Container - Focus on Zoom */}
+                   <div className="h-64 relative overflow-hidden">
+                      <Image src={card.img} fill className="object-cover transition-transform duration-1000 group-hover:scale-110" alt={card.title} />
+                      <div className="absolute inset-0 bg-linear-to-b from-black/20 via-transparent to-transparent"></div>
+                      <div className="absolute top-8 left-8">
+                         <span className="px-4 py-1.5 bg-white/90 backdrop-blur-md rounded-full text-[9px] font-bold text-gray-900 uppercase tracking-widest border border-white/20">
+                            {card.tag}
                          </span>
                       </div>
-                      
-                      <p className="text-gray-500 font-light text-base leading-relaxed mb-10">
-                         {card.desc}
-                      </p>
-                    </div>
+                   </div>
 
-                    {/* Technical Specification Bar */}
-                    <div className="pt-8 border-t border-gray-100 grid grid-cols-1 gap-2">
-                       {Object.entries(card.specs).map(([key, val], idx) => (
-                         <div key={idx} className="flex justify-between items-center text-[10px]">
-                            <span className="font-bold uppercase tracking-[0.2em] text-gray-400">{key}</span>
-                            <span className="font-semibold text-gray-900">{val}</span>
+                   {/* Bottom Content Container - Focus on Visibility & Depth */}
+                   <div className="flex-1 p-10 bg-white flex flex-col justify-between">
+                      <div>
+                        <div className="flex justify-between items-baseline mb-6">
+                           <h3 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
+                              {card.title.split(' ').map((word, idx) => (
+                                <span key={idx} className={idx === card.title.split(' ').length - 1 ? "font-semibold italic text-[#E32219]" : ""}>{word} </span>
+                              ))}
+                           </h3>
+                           <span className="text-lg font-black text-gray-100 uppercase leading-none">
+                              {card.id}
+                           </span>
+                        </div>
+                        
+                        <p className="text-gray-500 font-light text-base leading-relaxed mb-10">
+                           {card.desc}
+                        </p>
+                      </div>
+
+                      {/* Technical Specification Bar */}
+                      <div className="pt-8 border-t border-gray-100 grid grid-cols-1 gap-2">
+                         {Object.entries(card.specs).map(([key, val], idx) => (
+                           <div key={idx} className="flex justify-between items-center text-[10px]">
+                              <span className="font-bold uppercase tracking-[0.2em] text-gray-400">{key}</span>
+                              <span className="font-semibold text-gray-900">{val}</span>
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Sector Support Strip */}
+            <div className="mt-24 pt-12 border-t border-gray-100 flex flex-wrap justify-center items-center gap-12 reveal">
+               <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-300">Target Sectors</span>
+               {["Pharmaceutical", "Spirits", "Cosmetics", "Automotive", "Food & Dairy"].map((sector, i) => (
+                 <div key={i} className="text-sm font-medium text-gray-400 hover:text-[#E32219] transition-colors cursor-default">
+                    {sector}
+                 </div>
+               ))}
+            </div>
+          </div>
+        </section>
+      </LazyRender>
+
+      {/* 5. Converting & Expertise - Dual Power Module */}
+      <LazyRender minHeight="600px">
+        <section className="relative py-20 md:py-24 mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-[#050505] overflow-hidden text-white">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_rgba(227,34,25,0.05)_0%,_transparent_70%)]"></div>
+          
+          <div className="container mx-auto px-6 md:px-12 relative z-10">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32">
+              
+              {/* Converting Unit */}
+              <div className="reveal flex flex-col justify-center">
+                 <div className="space-y-8 mb-16">
+                    <div className="inline-flex items-center gap-4">
+                       <div className="w-12 h-px bg-[#E32219]"></div>
+                       <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#E32219]">Post-Print Excellence</span>
+                    </div>
+                    <h2 className="text-6xl md:text-7xl font-light tracking-tighter leading-none">
+                       Precision <br />
+                       <span className="font-semibold italic text-white leading-none">Converting</span>
+                    </h2>
+                    <p className="text-gray-400 font-light text-lg leading-relaxed max-w-md">
+                       High-speed finish units engineered for dimensional absolute stability and clean material separation.
+                    </p>
+                 </div>
+
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                    {[
+                      { label: "Die Cutting", value: "±0.1mm Tolerance", icon: Scissors },
+                      { label: "Refining", value: "100% Optic Inspection", icon: ShieldCheck },
+                      { label: "Slitting", value: "Down to 3mm Micro", icon: Activity },
+                      { label: "Rewinding", value: "High-Tension Roll Units", icon: Layers }
+                    ].map((item, i) => (
+                      <div key={i} className="reveal group/item relative">
+                         <div className="flex items-center gap-4 mb-2">
+                            <item.icon className="w-5 h-5 text-[#E32219]/60 group-hover/item:text-[#E32219] transition-colors" />
+                            <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{item.label}</h4>
                          </div>
-                       ))}
+                         <div className="text-lg font-medium text-white group-hover/item:translate-x-2 transition-transform">{item.value}</div>
+                      </div>
+                    ))}
+                 </div>
+              </div>
+
+              {/* Industrial Expertise Unit */}
+              <div className="reveal">
+                 <div className="relative p-12 md:p-16 bg-white/[0.03] border border-white/10 rounded-[4rem] group overflow-hidden">
+                    <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,_rgba(227,34,25,0.08),_transparent_40%)]"></div>
+                    
+                    <div className="relative z-10">
+                      <div className="flex justify-between items-start mb-12">
+                         <div className="w-16 h-16 bg-white shadow-2xl rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Cpu className="w-8 h-8 text-[#E32219]" />
+                         </div>
+                         <div className="text-right">
+                            <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Standard</div>
+                            <div className="text-xs font-bold text-[#E32219]">ASTM-D3330</div>
+                         </div>
+                      </div>
+
+                      <h3 className="text-4xl lg:text-5xl font-light mb-12 tracking-tight">
+                         Industrial <br />
+                         <span className="font-semibold italic text-[#E32219]">Expertise</span>
+                      </h3>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
+                         {[
+                           "Polyester (PET) Substrates",
+                           "Polycarbonate Overlays",
+                           "Vinyl & Synthetic Film",
+                           "Barcode / QR Serialization",
+                           "Tamper-Evident Units",
+                           "Tier-1 Automotive Labels",
+                           "Cryogenic Resistance",
+                           "High-Temp Thermal Bonds"
+                         ].map((item, i) => (
+                           <div key={i} className="flex items-center gap-4 py-1">
+                              <div className="w-2 h-2 rounded-full bg-[#E32219]/60 shadow-[0_0_8px_rgba(227,34,25,0.4)]"></div>
+                              <span className="text-sm md:text-base font-medium text-gray-200 group-hover:text-white transition-colors">{item}</span>
+                           </div>
+                         ))}
+                      </div>
+
+                      <div className="mt-16 pt-10 border-t border-white/10 flex items-center justify-between">
+                         <div className="flex -space-x-3">
+                            {[1,2,3,4].map(i => (
+                              <div key={i} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-[#E32219]">✓</div>
+                            ))}
+                         </div>
+                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-500">ISO 15378 · GMP · FDA</span>
+                      </div>
                     </div>
                  </div>
               </div>
-            ))}
-          </div>
 
-          {/* Sector Support Strip */}
-          <div className="mt-24 pt-12 border-t border-gray-100 flex flex-wrap justify-center items-center gap-12 reveal">
-             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-300">Target Sectors</span>
-             {["Pharmaceutical", "Spirits", "Cosmetics", "Automotive", "Food & Dairy"].map((sector, i) => (
-               <div key={i} className="text-sm font-medium text-gray-400 hover:text-[#E32219] transition-colors cursor-default">
-                  {sector}
-               </div>
-             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. Converting & Expertise - Dual Power Module */}
-      <section className="relative py-20 md:py-24 mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-[#050505] relative overflow-hidden text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_rgba(227,34,25,0.05)_0%,_transparent_70%)]"></div>
-        
-        <div className="container mx-auto px-6 md:px-12 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-32">
-            
-            {/* Converting Unit */}
-            <div className="reveal flex flex-col justify-center">
-               <div className="space-y-8 mb-16">
-                  <div className="inline-flex items-center gap-4">
-                     <div className="w-12 h-px bg-[#E32219]"></div>
-                     <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#E32219]">Post-Print Excellence</span>
-                  </div>
-                  <h2 className="text-6xl md:text-7xl font-light tracking-tighter leading-none">
-                     Precision <br />
-                     <span className="font-semibold italic text-white leading-none">Converting</span>
-                  </h2>
-                  <p className="text-gray-400 font-light text-lg leading-relaxed max-w-md">
-                     High-speed finish units engineered for dimensional absolute stability and clean material separation.
-                  </p>
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  {[
-                    { label: "Die Cutting", value: "±0.1mm Tolerance", icon: Scissors },
-                    { label: "Refining", value: "100% Optic Inspection", icon: ShieldCheck },
-                    { label: "Slitting", value: "Down to 3mm Micro", icon: Activity },
-                    { label: "Rewinding", value: "High-Tension Roll Units", icon: Layers }
-                  ].map((item, i) => (
-                    <div key={i} className="reveal group/item relative">
-                       <div className="flex items-center gap-4 mb-2">
-                          <item.icon className="w-5 h-5 text-[#E32219]/60 group-hover/item:text-[#E32219] transition-colors" />
-                          <h4 className="text-[10px] font-bold uppercase tracking-widest text-gray-500">{item.label}</h4>
-                       </div>
-                       <div className="text-lg font-medium text-white group-hover/item:translate-x-2 transition-transform">{item.value}</div>
-                    </div>
-                  ))}
-               </div>
             </div>
 
-            {/* Industrial Expertise Unit */}
-            <div className="reveal">
-               <div className="relative p-12 md:p-16 bg-white/[0.03] border border-white/10 rounded-[4rem] group overflow-hidden">
-                  <div className="absolute top-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_20%,_rgba(227,34,25,0.08),_transparent_40%)]"></div>
-                  
-                  <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-12">
-                       <div className="w-16 h-16 bg-white shadow-2xl rounded-3xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <Cpu className="w-8 h-8 text-[#E32219]" />
-                       </div>
-                       <div className="text-right">
-                          <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">Standard</div>
-                          <div className="text-xs font-bold text-[#E32219]">ASTM-D3330</div>
-                       </div>
-                    </div>
-
-                    <h3 className="text-4xl lg:text-5xl font-light mb-12 tracking-tight">
-                       Industrial <br />
-                       <span className="font-semibold italic text-[#E32219]">Expertise</span>
-                    </h3>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-6">
-                       {[
-                         "Polyester (PET) Substrates",
-                         "Polycarbonate Overlays",
-                         "Vinyl & Synthetic Film",
-                         "Barcode / QR Serialization",
-                         "Tamper-Evident Units",
-                         "Tier-1 Automotive Labels",
-                         "Cryogenic Resistance",
-                         "High-Temp Thermal Bonds"
-                       ].map((item, i) => (
-                         <div key={i} className="flex items-center gap-4 py-1">
-                            <div className="w-2 h-2 rounded-full bg-[#E32219]/60 shadow-[0_0_8px_rgba(227,34,25,0.4)]"></div>
-                            <span className="text-sm md:text-base font-medium text-gray-200 group-hover:text-white transition-colors">{item}</span>
-                         </div>
-                       ))}
-                    </div>
-
-                    <div className="mt-16 pt-10 border-t border-white/10 flex items-center justify-between">
-                       <div className="flex -space-x-3">
-                          {[1,2,3,4].map(i => (
-                            <div key={i} className="w-8 h-8 rounded-full bg-white/5 border border-white/10 backdrop-blur-md flex items-center justify-center text-[10px] font-bold text-[#E32219]">✓</div>
-                          ))}
-                       </div>
-                       <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-gray-500">ISO 15378 · GMP · FDA</span>
-                    </div>
-                  </div>
-               </div>
-            </div>
-
-          </div>
-
-          {/* Bottom Capabilities Strip */}
-          <div className=" pt-12 ">
-            <div className="flex flex-wrap items-center justify-between gap-6">
-              <div className="flex items-center gap-4">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">Core competencies</span>
-                <div className="h-4 w-px bg-white/10"></div>
-                <span className="text-xs text-gray-400">24/7 production</span>
-                <span className="text-xs text-white/20">•</span>
-                <span className="text-xs text-gray-400">Just-in-time delivery</span>
-                <span className="text-xs text-white/20">•</span>
-                <span className="text-xs text-gray-400">Lot traceability</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-[#E32219] bg-[#E32219]/10 border border-[#E32219]/20 px-4 py-2 rounded-full">
-                  Tolerance: ±0.1mm
-                </span>
+            {/* Bottom Capabilities Strip */}
+            <div className=" pt-12 ">
+              <div className="flex flex-wrap items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-500">Core competencies</span>
+                  <div className="h-4 w-px bg-white/10"></div>
+                  <span className="text-xs text-gray-400">24/7 production</span>
+                  <span className="text-xs text-white/20">•</span>
+                  <span className="text-xs text-gray-400">Just-in-time delivery</span>
+                  <span className="text-xs text-white/20">•</span>
+                  <span className="text-xs text-gray-400">Lot traceability</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono text-[#E32219] bg-[#E32219]/10 border border-[#E32219]/20 px-4 py-2 rounded-full">
+                    Tolerance: ±0.1mm
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </LazyRender>
 
-    <FinishesGallery/>
-    
+      <LazyRender minHeight="500px">
+        <FinishesGallery />
+      </LazyRender>
+      
       {/* 6. Why TRRIDEV LABELSS? - Modern Value Showcase */}
-      <section className="relative mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-white relative overflow-hidden">
-        {/* Decorative Watermark */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-black text-gray-50/50 pointer-events-none select-none uppercase tracking-tighter">
-          QUALITY
-        </div>
-        
-        <div className="container mx-auto px-6 md:px-12 relative z-10">
-          <div className="flex flex-col lg:flex-row gap-0 rounded-[64px] border border-gray-100 overflow-hidden shadow-2xl shadow-gray-200/50 bg-white items-stretch reveal">
-            <div className="w-full lg:w-[40%] bg-[#050505] p-16 md:p-24 text-white relative flex flex-col justify-between">
-              <div className="absolute top-10 right-10 opacity-20">
-                 <ShieldCheck className="w-24 h-24 text-[#E32219]" />
-              </div>
-              <div className="space-y-8 relative z-10">
-                 <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#E32219]">Legacy of Trust</span>
-                 <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight italic">Why <br /><span className="text-[#E32219]">Trridev?</span></h2>
-              </div>
-              <p className="text-gray-400 font-light leading-relaxed mt-12 relative z-10 max-w-xs">
-                We don’t just print labels — we engineer reliable identification solutions that enhance brand value, ensure compliance, and deliver performance.
-              </p>
-            </div>
-            
-            <div className="w-full lg:w-[60%] p-16 md:p-24 bg-white flex flex-col justify-center">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
-                {[
-                  { title: "Complete Capability", desc: "Dual flexo & digital label printing unit." },
-                  { title: "Advanced LED", desc: "State-of-the-art ink curing technology." },
-                  { title: "Specialty Expertise", desc: "Security and premium label solutions." },
-                  { title: "In-House Converting", desc: "Fully integrated finishing infrastructure." },
-                  { title: "Flexible Production", desc: "Agile bulk and short-run production models." },
-                  { title: "On-Time Commitment", desc: "Reliable production and on-time delivery." },
-                  { title: "Technical Support", desc: "Dedicated engineering and technical consultation." }
-                ].map((item, i) => (
-                  <div key={i} className="group flex flex-col gap-4">
-                    <div className="flex items-center gap-3">
-                       <CheckCircle2 className="w-5 h-5 text-green-500 group-hover:scale-110 transition-transform" />
-                       <h4 className="text-xs font-bold uppercase tracking-widest text-gray-900">{item.title}</h4>
-                    </div>
-                    <p className="text-gray-500 text-xs font-light leading-relaxed">{item.desc}</p>
-                  </div>
-                ))}
+      <LazyRender minHeight="600px">
+        <section className="relative mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-white overflow-hidden">
+          {/* Decorative Watermark */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-[20vw] font-black text-gray-50/50 pointer-events-none select-none uppercase tracking-tighter">
+            QUALITY
+          </div>
+          
+          <div className="container mx-auto px-6 md:px-12 relative z-10">
+            <div className="flex flex-col lg:flex-row gap-0 rounded-[64px] border border-gray-100 overflow-hidden shadow-2xl shadow-gray-200/50 bg-white items-stretch reveal">
+              <div className="w-full lg:w-[40%] bg-[#050505] p-16 md:p-24 text-white relative flex flex-col justify-between">
+                <div className="absolute top-10 right-10 opacity-20">
+                   <ShieldCheck className="w-24 h-24 text-[#E32219]" />
+                </div>
+                <div className="space-y-8 relative z-10">
+                   <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#E32219]">Legacy of Trust</span>
+                   <h2 className="text-5xl md:text-7xl font-bold tracking-tighter leading-tight italic">Why <br /><span className="text-[#E32219]">Trridev?</span></h2>
+                </div>
+                <p className="text-gray-400 font-light leading-relaxed mt-12 relative z-10 max-w-xs">
+                  We don’t just print labels — we engineer reliable identification solutions that enhance brand value, ensure compliance, and deliver performance.
+                </p>
               </div>
               
-              <div className="mt-16 pt-10 border-t border-gray-100 italic font-medium text-gray-400 text-sm">
-                Everything you need. <span className="text-[#E32219] font-bold">All under one roof.</span>
+              <div className="w-full lg:w-[60%] p-16 md:p-24 bg-white flex flex-col justify-center">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10">
+                  {[
+                    { title: "Complete Capability", desc: "Dual flexo & digital label printing unit." },
+                    { title: "Advanced LED", desc: "State-of-the-art ink curing technology." },
+                    { title: "Specialty Expertise", desc: "Security and premium label solutions." },
+                    { title: "In-House Converting", desc: "Fully integrated finishing infrastructure." },
+                    { title: "Flexible Production", desc: "Agile bulk and short-run production models." },
+                    { title: "On-Time Commitment", desc: "Reliable production and on-time delivery." },
+                    { title: "Technical Support", desc: "Dedicated engineering and technical consultation." }
+                  ].map((item, i) => (
+                    <div key={i} className="group flex flex-col gap-4">
+                      <div className="flex items-center gap-3">
+                         <CheckCircle2 className="w-5 h-5 text-green-500 group-hover:scale-110 transition-transform" />
+                         <h4 className="text-xs font-bold uppercase tracking-widest text-gray-900">{item.title}</h4>
+                      </div>
+                      <p className="text-gray-500 text-xs font-light leading-relaxed">{item.desc}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="mt-16 pt-10 border-t border-gray-100 italic font-medium text-gray-400 text-sm">
+                  Everything you need. <span className="text-[#E32219] font-bold">All under one roof.</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </LazyRender>
     </div>
   );
 }

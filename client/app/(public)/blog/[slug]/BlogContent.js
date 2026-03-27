@@ -18,7 +18,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getImgUrl } from '@/utils/image-url';
+import { getImgUrl, isLocalImage } from '@/utils/image-url';
+import { sanitizeRichText } from '@/utils/rich-text';
 import PageHeader from '@/components/common/PageHeader';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -95,12 +96,13 @@ export default function BlogContent({ blog }) {
             {blog.featuredImage && (
               <div className="mb-8 relative z-10">
                 <div className="relative aspect-video md:aspect-[21/9] overflow-hidden rounded-[24px] md:rounded-[32px]">
-                  <Image
-                    src={getImgUrl(blog.featuredImage)}
-                    alt={blog.pageTitle || blog.title}
-                    fill
-                    priority
-                    className="object-cover"
+                    <Image
+                      src={getImgUrl(blog.featuredImage) || "https://images.unsplash.com/photo-1557804506-669a67965ba0"}
+                      alt={blog.pageTitle || blog.title}
+                      fill
+                      priority
+                      unoptimized={isLocalImage(getImgUrl(blog.featuredImage))}
+                      className="object-cover"
                     sizes="(max-width: 768px) 100vw, 800px"
                   />
                 </div>
@@ -162,7 +164,7 @@ export default function BlogContent({ blog }) {
                 </div>
               )}
 
-              <div dangerouslySetInnerHTML={{ __html: blog.content }} />
+              <div className="rich-text-content" dangerouslySetInnerHTML={{ __html: sanitizeRichText(blog.content) }} />
             </div>
 
             {/* 5. Highlight Module */}
@@ -207,8 +209,8 @@ export default function BlogContent({ blog }) {
               <div key={idx} className="mb-10 reveal-element">
                 <h2 className="text-2xl font-medium text-gray-900 mb-4 tracking-tight">{section.heading}</h2>
                 <div 
-                  className="prose prose-lg prose-gray max-w-none prose-p:leading-[1.75] prose-p:mb-6"
-                  dangerouslySetInnerHTML={{ __html: section.content }} 
+                  className="rich-text-content prose prose-lg prose-gray max-w-none prose-p:leading-[1.75] prose-p:mb-6"
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichText(section.content) }} 
                 />
               </div>
             ))}

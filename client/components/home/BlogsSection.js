@@ -10,7 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { blogService } from '@/services/blog.service';
 import SectionLoader from '@/components/common/SectionLoader';
 import { format } from 'date-fns';
-import { getImgUrl } from '@/utils/image-url';
+import { getImgUrl, isLocalImage } from '@/utils/image-url';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -38,39 +38,51 @@ export default function BlogsSection({ initialBlogs = [] }) {
     fetchRecentBlogs();
   }, [initialBlogs]);
 
-  // Animations (run only after loading is done and we have blogs)
+  // Animations (on-demand viewport ignition for TBT)
   useEffect(() => {
     if (loading || blogs.length === 0) return;
 
-    const ctx = gsap.context(() => {
-      // Header entrance
-      gsap.from(headerRef.current?.children || [], {
-        y: 30,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: headerRef.current,
-          start: "top 85%"
-        }
-      });
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        const ctx = gsap.context(() => {
+          // Header entrance
+          gsap.from(headerRef.current?.children || [], {
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: "top 85%"
+            }
+          });
 
-      // Cards stagger reveal
-      gsap.from(".blog-card", {
-        y: 40,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.2,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".blog-grid",
-          start: "top 85%"
-        }
-      });
-    }, containerRef);
+          // Cards stagger reveal
+          gsap.from(".blog-card", {
+            y: 40,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".blog-grid",
+              start: "top 85%"
+            }
+          });
+        }, containerRef);
+        
+        window._blogsCtx = ctx;
+        observer.disconnect();
+      }
+    }, { rootMargin: "200px" });
 
-    return () => ctx.revert();
+    if (containerRef.current) observer.observe(containerRef.current);
+
+    return () => {
+      if (window._blogsCtx) window._blogsCtx.revert();
+      observer.disconnect();
+    };
   }, [loading, blogs]);
 
   if (loading) {
@@ -125,10 +137,10 @@ export default function BlogsSection({ initialBlogs = [] }) {
                   <div className="relative aspect-16/10 overflow-hidden rounded-2xl bg-gray-100 shadow-xl shadow-black/5">
                     <Image 
                       src={getImgUrl(featuredBlog.featuredImage) || "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80"} 
-                      alt={featuredBlog.title}
+                      alt={featuredBlog.title || "Tridev Labels Featured Blog"}
                       fill
                       loading="lazy"
-                      unoptimized={true}
+                      unoptimized={isLocalImage(getImgUrl(featuredBlog.featuredImage))}
                       sizes="(max-width: 768px) 100vw, 800px"
                       className="w-full h-full object-cover brightness-90 group-hover:brightness-100 group-hover:scale-105 transition-all duration-1000"
                     />
@@ -175,12 +187,12 @@ export default function BlogsSection({ initialBlogs = [] }) {
                          <div className="w-full md:w-44 aspect-square shrink-0 overflow-hidden rounded-xl bg-gray-100 shadow-sm relative">
                             <Image 
                               src={getImgUrl(blog.featuredImage) || "https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80"} 
-                              alt={blog.title}
+                              alt={blog.title || "Tridev Labels Insight"}
                               fill
                               loading="lazy"
-                              unoptimized={true}
-                              sizes="(max-width: 768px) 100vw, 200px"
-                              className="w-full h-full object-cover brightness-95 group-hover:brightness-100 group-hover:scale-110 transition-all duration-700"
+                              unoptimized={isLocalImage(getImgUrl(blog.featuredImage))}
+                              sizes="(max-width: 768px) 100vw, 300px"
+                              className="object-cover transition-opacity duration-500"
                             />
                          </div>
                          

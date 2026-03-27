@@ -17,52 +17,68 @@ export default function AboutMetrics() {
   const containerRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Reveal the container
-      gsap.from(".metrics-main-card", {
-        y: 40,
-        opacity: 0,
-        duration: 1.5,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%"
+    // 1200ms Performant Buffer: Delay engine startup to secure LCP
+    const timer = setTimeout(() => {
+      let ctx;
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          ctx = gsap.context(() => {
+            // Reveal the container
+            gsap.from(".metrics-main-card", {
+              y: 40,
+              opacity: 0,
+              duration: 1.5,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top 80%"
+              }
+            });
+
+            // Animate lines
+            gsap.from(".divider-line", {
+              scaleY: 0,
+              transformOrigin: "top",
+              duration: 1.5,
+              stagger: 0.2,
+              ease: "power4.inOut",
+              scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top 70%"
+              }
+            });
+
+            // Character count animation - Optimized to reduce layout thrashing
+            gsap.utils.toArray(".count-num").forEach((num) => {
+              const val = parseInt(num.getAttribute("data-value"));
+              const obj = { value: 0 };
+              gsap.to(obj, {
+                value: val,
+                duration: 2.5,
+                ease: "power2.out",
+                scrollTrigger: {
+                  trigger: num,
+                  start: "top 90%"
+                },
+                onUpdate: () => {
+                  num.textContent = Math.floor(obj.value);
+                }
+              });
+            });
+          }, containerRef);
+        } else {
+          if (ctx) ctx.revert();
         }
-      });
+      }, { rootMargin: "100px", threshold: 0.01 });
 
-      // Animate lines
-      gsap.from(".divider-line", {
-        scaleY: 0,
-        transformOrigin: "top",
-        duration: 1.5,
-        stagger: 0.2,
-        ease: "power4.inOut",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 70%"
-        }
-      });
+      if (containerRef.current) observer.observe(containerRef.current);
+      window._metricsObserver = observer;
+    }, 1200);
 
-      // Character count animation - Optimized to reduce layout thrashing
-      gsap.utils.toArray(".count-num").forEach((num) => {
-        const val = parseInt(num.getAttribute("data-value"));
-        const obj = { value: 0 };
-        gsap.to(obj, {
-          value: val,
-          duration: 2.5,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: num,
-            start: "top 90%"
-          },
-          onUpdate: () => {
-            num.textContent = Math.floor(obj.value);
-          }
-        });
-      });
-    }, containerRef);
-
-    return () => ctx.revert();
+    return () => {
+      clearTimeout(timer);
+      if (window._metricsObserver) window._metricsObserver.disconnect();
+    };
   }, []);
 
   return (

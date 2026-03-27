@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { galleryService } from '@/components/admin/services/gallery.service';
@@ -198,6 +198,8 @@ const GalleryPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+  const [modalTitle, setModalTitle] = useState("Success!");
   const [showForm, setShowForm] = useState(false);
 
   const fileInputRef = useRef(null);
@@ -251,6 +253,23 @@ const GalleryPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setModalType("error");
+        setModalTitle("Invalid Format");
+        setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        setModalType("error");
+        setModalTitle("File Too Large");
+        setSuccessMessage("Image size should be less than 5MB");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
       setFormData(prev => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -284,6 +303,8 @@ const GalleryPage = () => {
 
     try {
       setSubmitting(true);
+      setModalType("success");
+      setModalTitle("Success!");
       if (editingId) {
         await galleryService.update(editingId, submission);
         setSuccessMessage("Gallery item updated successfully!");
@@ -296,7 +317,13 @@ const GalleryPage = () => {
       fetchGallery();
       setShowSuccessModal(true);
     } catch (err) {
-      setError(err.response?.data?.message || "Operation failed.");
+      console.error("Gallery Save:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Internal server error";
+      setModalType("error");
+      setModalTitle("Transmission Failure");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -358,11 +385,18 @@ const GalleryPage = () => {
       setGalleryItems(prev => prev.filter(item => item._id !== deleteId));
       setDeleteId(null);
       setShowDeleteModal(false);
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage("Gallery item deleted successfully!");
       setShowSuccessModal(true);
     } catch (err) {
       console.error("GalleryPage: Delete failed:", err);
-      setError(err.message || "Delete failed.");
+      const msg = err.response?.data?.error || err.message || "Delete failed.";
+      setModalType("error");
+      setModalTitle("Operation Failed");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
       setShowDeleteModal(false);
     }
   };
@@ -585,7 +619,7 @@ const GalleryPage = () => {
                    <input
                      ref={fileInputRef}
                      type="file"
-                     accept="image/*"
+                     accept=".jpg,.jpeg,.png,.gif,.webp"
                      onChange={handleImageChange}
                      className="hidden"
                    />
@@ -693,8 +727,9 @@ const GalleryPage = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Protocol Success"
+        title={modalTitle}
         message={successMessage}
+        type={modalType}
       />
     </div>
   );

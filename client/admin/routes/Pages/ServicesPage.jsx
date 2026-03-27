@@ -21,8 +21,8 @@ import {
   LayoutGrid,
   ArrowLeft
 } from "lucide-react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import ReactQuill from "react-quill-new";
+import "react-quill-new/dist/quill.snow.css";
 import { cn } from "@/utils/cn";
 import { getImgUrl } from "../../utils/image-url";
 import {

@@ -64,7 +64,6 @@ export default function PageHeader({
             fetchPriority="high"
             decoding="sync"
             className="object-cover"
-            unoptimized={true}
             sizes="100vw"
           />
         </div>

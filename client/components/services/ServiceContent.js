@@ -11,6 +11,7 @@ import FooterSection from '@/components/layout/FooterSection';
 import PageHeader from '@/components/common/PageHeader';
 import Image from 'next/image';
 import { getImgUrl } from '@/utils/image-url';
+import { sanitizeRichText } from '@/utils/rich-text';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -140,7 +141,6 @@ export default function ServiceContent({ service, slug }) {
         title={service.title}
         subtitle={service.subtitle}
         breadcrumb="Services"
-        description={service.description}
       />
 
       {/* 2. Institutional Overview - Adaptive Section */}
@@ -509,14 +509,14 @@ export default function ServiceContent({ service, slug }) {
                     </div>
 
                     <div 
-                      className="prose prose-xl prose-gray max-w-none font-light leading-relaxed text-gray-600
+                      className="rich-text-content prose prose-xl prose-gray max-w-none font-light leading-relaxed text-gray-600
                                  prose-headings:text-gray-900 prose-headings:font-light prose-headings:tracking-tight
                                  prose-strong:text-gray-900 prose-strong:font-bold prose-strong:bg-red-50 prose-strong:px-1
                                  prose-a:text-[#E32219] prose-a:font-bold
                                  prose-ul:list-none prose-ul:pl-0 prose-li:relative prose-li:pl-8 
                                  prose-li:before:content-[''] prose-li:before:absolute prose-li:before:left-0 prose-li:before:top-4 
                                  prose-li:before:w-2 prose-li:before:h-2 prose-li:before:bg-[#E32219] prose-li:before:rounded-full"
-                      dangerouslySetInnerHTML={{ __html: section.content }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeRichText(section.content) }}
                     />
 
                     <div className="pt-8 border-t border-gray-100">
@@ -600,7 +600,7 @@ export default function ServiceContent({ service, slug }) {
                 {block.title && <h3 className="text-3xl font-light mb-6 text-gray-900">{block.title}</h3>}
                 <div 
                   className="text-gray-600 text-lg font-light leading-relaxed prose prose-red max-w-none"
-                  dangerouslySetInnerHTML={{ __html: block.html || block.text }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichText(block.html || block.text) }}
                 />
               </div>
             ))}

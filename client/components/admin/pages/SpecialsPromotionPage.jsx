@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { 
@@ -26,6 +26,8 @@ const SpecialsPromotionPage = () => {
   const [promotionToDelete, setPromotionToDelete] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+  const [modalTitle, setModalTitle] = useState("Success!");
   const [showForm, setShowForm] = useState(false);
   
   const fileInputRef = useRef(null);
@@ -46,6 +48,15 @@ const SpecialsPromotionPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setModalType("error");
+        setModalTitle("Invalid Format");
+        setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) {
         setError("Image size exceeds 5MB limit.");
         return;
@@ -76,12 +87,20 @@ const SpecialsPromotionPage = () => {
       fetchPromotions();
       setFeaturedImage(null);
       setImagePreview(null);
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage("Campaign launched successfully!");
       setShowSuccessModal(true);
       setShowForm(false);
       setMonth("");
     } catch (err) {
-      setError(err.message || "Failed to launch campaign.");
+      console.error("Submission Failure:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Failed to launch campaign.";
+      setModalType("error");
+      setModalTitle("Transmission Failure");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -99,10 +118,18 @@ const SpecialsPromotionPage = () => {
       fetchPromotions();
       setShowDeleteModal(false);
       setPromotionToDelete(null);
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage("Promotion removed from live archive.");
       setShowSuccessModal(true);
     } catch (err) {
-      setError("Failed to end campaign.");
+      console.error("Delete Error:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Failed to end campaign.";
+      setModalType("error");
+      setModalTitle("Operation Failed");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
       setShowDeleteModal(false);
     }
   };
@@ -122,8 +149,9 @@ const SpecialsPromotionPage = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Success!"
+        title={modalTitle}
         message={successMessage}
+        type={modalType}
       />
 
       <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between border-b border-slate-100 pb-10">
@@ -202,13 +230,13 @@ const SpecialsPromotionPage = () => {
                         <Upload size={32} />
                       </div>
                       <p className="text-sm font-black text-black uppercase tracking-widest">Upload Graphic Asset</p>
-                      <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">PNG, JPG or WebP</p>
+                      <p className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">PNG, JPG, WebP or GIF</p>
                     </div>
                   )}
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="image/*"
+                    accept=".jpg,.jpeg,.png,.gif,.webp"
                     onChange={handleImageChange}
                     className="hidden"
                   />

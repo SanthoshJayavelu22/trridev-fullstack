@@ -1,588 +1,724 @@
+// components/about/HistoryTimeline.jsx
 "use client";
 
-import { useRef, useEffect, useState } from 'react';
-import Image from 'next/image';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { motion, AnimatePresence } from 'framer-motion';
-import { History, ArrowRight, Calendar, Target, Settings, Award } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from "react";
+import { motion, useScroll, useTransform, useSpring, AnimatePresence } from "framer-motion";
+import Image from "next/image";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
 }
 
 const timelineData = [
   {
     year: "2008",
-    date: "JANUARY 2008",
-    title: "The Genesis",
-    label: "FOUNDATION",
-    description: "Trridev Labelss was founded in Chennai with a humble team of five and a bold vision. We started with traditional letterpress machines, delivering dependability and care with every print.",
-    details: [
-      "Founded with 5 precision experts",
-      "Traditional Letterpress start",
-      "Focus on Industrial Durability"
-    ],
-    image: "https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1200",
-    stat: "5 Members"
+    title: "Where It All Started",
+    description:
+      "Trridev Labelss Mfg Co was founded in Chennai with a simple goal — to deliver dependable label printing with honesty and care. We started with letterpress machines and a small but determined team.",
+    color: "#E32219",
+    image: "/label-printing-approach.png",
   },
   {
-    year: "2010",
-    date: "JUNE 2010",
-    title: "Scaling Up",
-    label: "EXPANSION",
-    description: "Growth demanded precision. We integrated the Onda 250 machine, doubling our production capacity and setting new benchmarks for efficiency in the local market.",
-    details: [
-      "Onda 250 System Integration",
-      "2× Production Capacity",
-      "In-House Quality Control"
-    ],
-    image: "https://images.unsplash.com/photo-1572021335469-31706a17aaef?auto=format&fit=crop&q=80&w=1200",
-    stat: "2× Output"
+    year: "June 2010",
+    title: "Taking Our First Step Forward",
+    description:
+      "As customer demand increased, we added the Onda 250 machine to strengthen our production capacity and serve our clients more efficiently.",
+    color: "#E32219",
+    image: "/capabilities/flexo-press.png",
   },
   {
-    year: "2014",
-    date: "JUNE 2014",
-    title: "Flexo Leap",
-    label: "INNOVATION",
-    description: "A pivotal technological jump. Installation of the Mark Andy 2200 Flexographic Press opened new possibilities in high-resolution, long-run industrial labeling.",
-    details: [
-      "Mark Andy 2200 Installation",
-      "Multi-Color Printing Precision",
-      "Accurate Repeat Consistency"
-    ],
-    image: "https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&q=80&w=1200",
-    stat: "Mark Andy 2200"
+    year: "June 2014",
+    title: "Moving into Advanced Flexo Printing",
+    description:
+      "With the installation of the Mark Andy 2200 Flexographic Press, we entered a new phase of printing technology, improving quality and expanding our capabilities.",
+    color: "#E32219",
+    image: "/capabilities/led-curing.png",
   },
   {
-    year: "2021",
-    date: "AUGUST 2021",
-    title: "Servo Era",
-    label: "TECHNOLOGY",
-    description: "High-speed servo letterpress machines with integrated hot foil units arrived, enabling premium finishing and sharper detail for top-tier branding.",
-    details: [
-      "LED Ink Curing Technology",
-      "High-Speed Servo Systems",
-      "Premium Hot Foil Finishing"
-    ],
-    image: "https://images.unsplash.com/photo-1581092160562-40aa08e78837?auto=format&fit=crop&q=80&w=1200",
-    stat: "Hot Foil"
+    year: "August 2021",
+    title: "Adding More Precision",
+    description:
+      "We installed a high-speed servo letterpress machine with repass printing and hot foil features. This allowed us to offer better finishing, sharper detail, and greater value to our customers.",
+    color: "#E32219",
+    image: "/industries/pharma.png",
   },
   {
-    year: "2023",
-    date: "DECEMBER 2023",
-    title: "Modern Chapter",
-    label: "FACILITY",
-    description: "Moved into a state-of-the-art 25,000 sq.ft facility — a statement of commitment to our team, our clients, and the future of precision manufacturing.",
-    details: [
-      "25,000 Sq.ft Technical Hub",
-      "Integrated Converting Units",
-      "Automated QC Workflow"
-    ],
-    image: "https://peppy-moonbeam-9fe49c.netlify.app/images/background-img-1.jpeg",
-    stat: "25,000 Sq.ft"
+    year: "June 2023",
+    title: "Improving Our Finishing Strength",
+    description:
+      "A high-speed 3-turret slitting machine was added to enhance finishing accuracy, reduce downtime, and improve overall production flow.",
+    color: "#E32219",
+    image: "/industries/auto.png",
   },
   {
-    year: "2025",
-    date: "OCTOBER 2025",
-    title: "Nilpeter Legend",
-    label: "PRESENT",
-    description: "The 9-colour Nilpeter FB-350 crossover system set a new standard for multi-color precision, reinforcing our position as industrial printing leaders.",
-    details: [
-      "Nilpeter FB-350 Operations",
-      "Advanced Digital Integration",
-      "Unrivaled Color Adhesion"
-    ],
-    image: "https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&q=80&w=1200",
-    stat: "9-Color FB350"
-  }
+    year: "December 2023",
+    title: "A New Space for Bigger Goals",
+    description:
+      "We moved into a larger and more modern facility. This was more than a relocation — it was a step towards the future, giving us the space and environment to grow stronger as a team.",
+    color: "#E32219",
+    image: "/hero-bg-bright.png",
+  },
+  {
+    year: "October 2025",
+    title: "Raising Our Technology Standards",
+    description:
+      "The installation of the 9-colour Nilpeter FB350 with crossover marked a major milestone. This advanced machine strengthened our multi-colour printing capabilities and improved consistency and turnaround time.",
+    color: "#E32219",
+    image: "/capabilities/security-labels.png",
+  },
+  {
+    year: "Today",
+    title: "Moving Forward with Purpose",
+    description:
+      "Our growth has always been steady and thoughtful. We continue to invest in technology, strengthen our team, and build long-term partnerships. Because for us, success is not only about expansion — it is about earning trust, maintaining quality, and keeping the promises we make.",
+    color: "#E32219",
+    image: "/industries/electronics.png",
+  },
 ];
 
-export default function HistoryTimeline() {
-  const triggerRef = useRef(null);
-  const horizontalRef = useRef(null);
-  const [activeIdx, setActiveIdx] = useState(0);
+// Liquid Glass Card Component
+const LiquidGlassCard = ({ children, isActive, color, index, isLeft }) => {
+  const cardRef = useRef(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isHovered, setIsHovered] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
 
-  useEffect(() => {
-    let ctx = gsap.context(() => {
-      const track = horizontalRef.current;
-      const slides = gsap.utils.toArray('.tl-slide');
-      if (!track || !slides.length) return;
-
-      const totalWidth = track.scrollWidth;
-      const amountToScroll = totalWidth - window.innerWidth;
-
-      // CORE HORIZONTAL SCROLL
-      const mainTl = gsap.timeline({
-        scrollTrigger: {
-          trigger: triggerRef.current,
-          pin: true,
-          scrub: 1.5,
-          start: "top top",
-          end: () => `+=${amountToScroll + window.innerWidth}`,
-          invalidateOnRefresh: true,
-          onUpdate: (self) => {
-            const idx = Math.floor(self.progress * (slides.length - 0.01));
-            setActiveIdx(idx);
-          }
-        }
-      });
-
-      mainTl.to(track, { x: -amountToScroll, ease: "none" });
-
-      // PER-SLIDE ANIMATIONS
-      slides.forEach((slide) => {
-        const card = slide.querySelector('.card-inner');
-        const heading = slide.querySelector('.slide-heading');
-        const fades = slide.querySelectorAll('.slide-fade');
-        const img = slide.querySelector('.card-image');
-        const yearBg = slide.querySelector('.year-bg');
-
-        if (card) {
-          gsap.fromTo(card,
-            { y: 100, opacity: 0, scale: 0.92 },
-            { y: 0, opacity: 1, scale: 1, ease: "power3.out", duration: 1,
-              scrollTrigger: { trigger: slide, containerAnimation: mainTl, start: "left 90%", toggleActions: "play none none reverse" }
-            }
-          );
-        }
-
-        if (heading) {
-          gsap.fromTo(heading,
-            { x: -60, opacity: 0 },
-            { x: 0, opacity: 1, ease: "power4.out", duration: 0.9,
-              scrollTrigger: { trigger: slide, containerAnimation: mainTl, start: "left 80%", toggleActions: "play none none reverse" }
-            }
-          );
-        }
-
-        if (fades.length) {
-          gsap.fromTo(fades,
-            { y: 35, opacity: 0 },
-            { y: 0, opacity: 1, stagger: 0.07, ease: "power3.out",
-              scrollTrigger: { trigger: slide, containerAnimation: mainTl, start: "left 75%", toggleActions: "play none none reverse" }
-            }
-          );
-        }
-
-        if (img) {
-          gsap.fromTo(img,
-            { scale: 1.18 },
-            { scale: 1.02, ease: "none",
-              scrollTrigger: { trigger: slide, containerAnimation: mainTl, start: "left right", end: "right left", scrub: true }
-            }
-          );
-        }
-
-        if (yearBg) {
-          gsap.fromTo(yearBg,
-            { x: 80, opacity: 0 },
-            { x: -80, opacity: 0.04, ease: "none",
-              scrollTrigger: { trigger: slide, containerAnimation: mainTl, start: "left right", end: "right left", scrub: 2 }
-            }
-          );
-        }
-      });
-    });
-
-    return () => ctx.revert();
-  }, []);
-
-  const activeItem = timelineData[activeIdx - 1];
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
+    setMousePosition({ x, y });
+  };
 
   return (
-    <section ref={triggerRef} className="relative bg-white text-gray-900 overflow-hidden font-sans selection:bg-[#E32219] selection:text-white">
+    <motion.div
+      ref={cardRef}
+      className="relative"
+      initial={{ opacity: 0, y: 100, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
+      viewport={{ once: false, margin: "-100px" }}
+      transition={{
+        duration: 0.8,
+        delay: index * 0.1,
+        ease: [0.25, 0.1, 0.25, 1],
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Printing Machine Lead Line */}
+      <motion.div
+        className="absolute top-0 left-0 w-full h-[2px] bg-[#E32219] shadow-[0_0_20px_#E32219] z-40 pointer-events-none"
+        initial={{ top: 0, opacity: 0 }}
+        whileInView={{ top: "100%", opacity: [0, 1, 1, 0] }}
+        viewport={{ once: false, amount: 0.1 }}
+        transition={{ duration: 1.5, ease: "linear" }}
+      />
 
-      {/* ── FIXED GUI ── */}
-      <div className="fixed top-0 left-0 right-0 z-50 pointer-events-none">
-        <AnimatePresence>
-          {activeIdx > 0 && activeItem && (
-            <motion.div
-              key={activeIdx}
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.5 }}
-              className="absolute top-6 left-8 lg:left-16 flex items-center gap-3"
-            >
-              <div className="size-8 rounded-full border border-gray-200 flex items-center justify-center bg-white shadow-sm">
-                <History size={14} className="text-[#E32219]" />
-              </div>
-              <div>
-                <p className="text-[9px] font-bold uppercase tracking-[0.5em] text-[#E32219] leading-none">{activeItem.label}</p>
-                <p className="text-[9px] text-gray-400 uppercase tracking-wider">Trridev Labels Mfg Co.</p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+      {/* Pure Glassy Background - Revealed via Printer clip-path */}
+      <motion.div
+        className="absolute inset-0 rounded-[32px] overflow-hidden bg-white/[0.04] border border-white/10"
+        initial={{ clipPath: "inset(0 0 100% 0)" }}
+        whileInView={{ clipPath: "inset(0 0 0% 0)" }}
+        viewport={{ once: true, amount: 0.1 }}
+        transition={{ duration: 1.5, ease: "linear" }}
+        animate={{
+          borderColor: isHovered ? "rgba(227,34,25,0.4)" : "rgba(255,255,255,0.08)",
+          background: isHovered ? "rgba(255, 255, 255, 0.08)" : "rgba(255, 255, 255, 0.04)",
+        }}
+      />
+      
+      {/* Content wrapper with proper breathable padding */}
+      <motion.div 
+        className="relative z-10 p-6 md:p-10 h-full flex flex-col overflow-visible"
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: false }}
+        transition={{ delay: 0.5, duration: 0.5 }}
+      >
+        {children}
+      </motion.div>
+      
+      {/* Floating Particles on Hover */}
+      <AnimatePresence>
+        {isHovered && (
+          <motion.div
+            className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            {isMounted && [...Array(12)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 rounded-full"
+                style={{
+                  background: `radial-gradient(circle, ${color}, transparent)`,
+                  left: `${(i * 137.5) % 100}%`,
+                  top: `${(i * 7.5) % 100}%`,
+                }}
+                animate={{
+                  x: [0, (Math.random() - 0.5) * 100],
+                  y: [0, (Math.random() - 0.5) * 100],
+                  scale: [0, 1, 0],
+                  opacity: [0, 0.6, 0],
+                }}
+                transition={{
+                  duration: 1 + Math.random(),
+                  repeat: Infinity,
+                  delay: Math.random() * 2,
+                  ease: "easeOut",
+                }}
+              />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
+};
 
-      {/* ── FIXED PROGRESS DOTS ── */}
-      <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-6 py-3 bg-white/80 backdrop-blur-xl border border-gray-100 rounded-full shadow-lg">
-        {timelineData.map((item, i) => (
-          <div key={i} className="flex flex-col items-center gap-1">
-            <div className={`rounded-full transition-all duration-500 ${
-              activeIdx === i + 1
-                ? 'w-8 h-[3px] bg-[#E32219] shadow-[0_0_8px_rgba(227,34,25,0.4)]'
-                : activeIdx > i + 1
-                  ? 'w-2 h-[3px] bg-[#E32219]/40'
-                  : 'w-2 h-[3px] bg-gray-200'
-            }`} />
-          </div>
-        ))}
-      </div>
+export default function HistoryTimeline() {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => setIsMounted(true), []);
 
-      {/* ── HORIZONTAL TRACK ── */}
-      <div ref={horizontalRef} className="flex flex-nowrap h-screen items-stretch w-max">
+  const sectionRef = useRef(null);
+  const timelineRef = useRef(null);
+  const itemsRef = useRef([]);
+  const parallaxRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(null);
+  const [loadedImages, setLoadedImages] = useState({});
+  const [showExplosion, setShowExplosion] = useState(false);
+  const [explosionPosition, setExplosionPosition] = useState({ x: 0, y: 0 });
 
-        {/* INTRO SLIDE — CINEMATIC EDITORIAL */}
-        <div className="tl-slide flex-shrink-0 w-screen h-screen flex items-center overflow-hidden relative">
-          
-          {/* Left Vertical Timeline Indicator */}
-          <div className="absolute left-8 top-1/2 -translate-y-1/2 hidden xl:flex flex-col items-center gap-4 z-20">
-            <div className="h-24 w-px bg-[#E32219]" />
-            <div className="flex flex-col items-center gap-2">
-              {timelineData.map((_, i) => (
-                <div key={i} className="size-1 rounded-full bg-gray-200 hover:bg-[#E32219] transition-colors cursor-default" />
+  // Framer Motion scroll progress
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
+  
+  const smoothProgress = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001,
+  });
+  
+  const backgroundY = useTransform(smoothProgress, [0, 1], [0, 200]);
+  const backgroundScale = useTransform(smoothProgress, [0, 1], [1, 1.05]);
+
+  const handleImageLoad = (index) => {
+    setLoadedImages(prev => ({ ...prev, [index]: true }));
+    ScrollTrigger.refresh();
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const allTrue = {};
+      timelineData.forEach((_, i) => allTrue[i] = true);
+      setLoadedImages(prev => ({ ...allTrue, ...prev }));
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const triggerExplosion = (e, index) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setExplosionPosition({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    setShowExplosion(true);
+    setTimeout(() => setShowExplosion(false), 800);
+    
+    if (typeof window !== "undefined" && window.confetti) {
+      window.confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { x: (rect.left + rect.width / 2) / window.innerWidth, y: (rect.top + rect.height / 2) / window.innerHeight },
+        colors: ['#E32219', '#ffffff', '#ff6b6b', '#ffa500'],
+        startVelocity: 25,
+        decay: 0.9,
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== "undefined" && !window.confetti) {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1';
+      script.async = true;
+      document.body.appendChild(script);
+    }
+
+    // 1200ms Performant Buffer: Delay engine startup to secure LCP
+    const timer = setTimeout(() => {
+      const ctx = gsap.context(() => {
+        // Animate timeline markers
+        itemsRef.current.forEach((item, index) => {
+          if (item) {
+            const marker = item.querySelector(".timeline-marker-glow");
+            if (marker) {
+              gsap.to(marker, {
+                scale: 1.2,
+                opacity: 0.6,
+                duration: 1.5,
+                repeat: -1,
+                yoyo: true,
+                ease: "sine.inOut",
+                delay: index * 0.2,
+              });
+            }
+          }
+        });
+      }, sectionRef);
+      window._historyCtx = ctx;
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+      if (window._historyCtx) window._historyCtx.revert();
+    };
+  }, []);
+
+  return (
+    <section ref={sectionRef} className="relative min-h-screen pb-24 pt-0 px-4 bg-[url('https://peppy-moonbeam-9fe49c.netlify.app/images/background-img-1.jpeg')] bg-cover bg-center bg-fixed overflow-x-hidden">
+      <div className="absolute inset-0 bg-[#0a0a0a]/80 z-0 pointer-events-none" />
+      {/* Explosion Effect */}
+      <AnimatePresence>
+        {showExplosion && (
+          <motion.div
+            className="fixed pointer-events-none z-[200]"
+            style={{
+              left: explosionPosition.x - 100,
+              top: explosionPosition.y - 100,
+            }}
+            initial={{ scale: 0, opacity: 1 }}
+            animate={{ scale: 2, opacity: 0 }}
+            exit={{ scale: 2, opacity: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <div className="absolute w-48 h-48">
+              {isMounted && [...Array(50)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className="absolute w-2 h-2 rounded-full bg-[#E32219]"
+                  initial={{
+                    x: 0,
+                    y: 0,
+                    rotate: 0,
+                    scale: 1,
+                  }}
+                  animate={{
+                    x: (Math.random() - 0.5) * 200,
+                    y: (Math.random() - 0.5) * 200,
+                    rotate: Math.random() * 720,
+                    scale: 0,
+                  }}
+                  transition={{
+                    duration: 0.5 + Math.random() * 0.5,
+                    ease: "easeOut",
+                  }}
+                  style={{
+                    left: '50%',
+                    top: '50%',
+                  }}
+                />
               ))}
             </div>
-            <div className="h-24 w-px bg-gray-100" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+
+
+      {/* Animated Gradient Orbs */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <motion.div
+          className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(227,34,25,0.08), transparent)",
+          }}
+          animate={{
+            x: [0, 50, -30, 0],
+            y: [0, -40, 30, 0],
+            scale: [1, 1.2, 0.9, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+        <motion.div
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full"
+          style={{
+            background: "radial-gradient(circle, rgba(255,255,255,0.05), transparent)",
+          }}
+          animate={{
+            x: [0, -40, 50, 0],
+            y: [0, 50, -30, 0],
+            scale: [1, 0.8, 1.2, 1],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        />
+      </div>
+
+      {/* Multi-layered particle field with Viewport-Aware Mounting to free CPU */}
+      {isMounted && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(60)].map((_, i) => (
+            <motion.div
+              key={`particle-${i}`}
+              className="absolute w-0.5 h-0.5 rounded-full"
+              style={{
+                background: i % 3 === 0 ? '#E32219' : '#ffffff',
+                left: `${((i * 13) % 100)}%`,
+                top: `${((i * 7) % 100)}%`,
+              }}
+              initial={{ opacity: 0 }}
+              whileInView={{ 
+                opacity: [0, 0.5, 0],
+                y: [0, -100, -200],
+                x: [0, (Math.random() - 0.5) * 100],
+              }}
+              viewport={{ rootMargin: "200px" }}
+              transition={{
+                duration: 3 + Math.random() * 2,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+                ease: "linear",
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className="relative z-10 max-w-7xl mx-auto">
+        {/* Header with Liquid Glass Effect */}
+        <motion.div
+          className="timeline-header text-center mb-20"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: false }}
+          transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        >
+          <motion.div
+            className="relative inline-block mb-10"
+            initial={{ scale: 0.9, opacity: 0 }}
+            whileInView={{ scale: 1, opacity: 1 }}
+            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+          >
+            <div className="absolute inset-0 bg-[#E32219]/20 blur-2xl rounded-full" />
+            <span className="relative px-6 py-2 border border-[#E32219]/60 rounded-full text-[10px] font-medium uppercase tracking-[0.25em] text-white bg-[#E32219]/20 backdrop-blur-sm">
+              CHRONOLOGY OF EXCELLENCE
+            </span>
+          </motion.div>
+          
+          <motion.h1
+            className="text-4xl md:text-6xl lg:text-7xl font-medium text-white leading-[1.1] tracking-tighter mb-8 max-w-5xl mx-auto"
+            initial={{ clipPath: "inset(0 0 100% 0)" }}
+            whileInView={{ clipPath: "inset(0 0 0% 0)" }}
+            transition={{ duration: 1, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            Built on <span className="text-[#E32219]">Trust</span>,<br />
+            <span className="font-light text-gray-400">Grown with <span className="text-[#E32219]">Commitment</span></span>
+          </motion.h1>
+          
+          <motion.p
+            className="text-gray-400 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed font-light"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            What began in 2008 as a small vision has grown step by step through
+            hard work, learning, and the continued trust of our customers.
+          </motion.p>
+
+          {/* Scroll Indicator */}
+          <motion.div
+            className="mt-16 flex justify-center"
+            animate={{ y: [0, 8, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className="flex flex-col items-center gap-2">
+              <span className="text-gray-500 text-[10px] tracking-wider">SCROLL TO EXPLORE</span>
+              <div className="w-5 h-8 border border-gray-500/50 rounded-full flex justify-center">
+                <motion.div
+                  className="w-1 h-2 bg-gray-500 rounded-full mt-1"
+                  animate={{ y: [0, 8, 0] }}
+                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+
+        {/* Timeline Container */}
+        <div ref={timelineRef} className="relative">
+          {/* Central Timeline Line with Liquid Flow */}
+          <div className="absolute left-[30px] md:left-1/2 transform md:-translate-x-1/2 w-[2px] h-full">
+            <motion.div
+              className="timeline-line w-full h-full bg-gradient-to-b from-transparent via-[#E32219] to-transparent origin-top"
+              initial={{ scaleY: 0 }}
+              whileInView={{ scaleY: 1 }}
+              viewport={{ once: false, amount: 0.3 }}
+              transition={{ duration: 1.5, ease: "easeInOut" }}
+            />
+            <motion.div
+              className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#E32219] to-transparent"
+              animate={{
+                y: ["0%", "100%"],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              style={{ filter: "blur(8px)" }}
+            />
           </div>
 
-          {/* Main Grid Layout */}
-          <div className="card-inner w-full max-w-[1440px] mx-auto px-16 lg:px-32 grid grid-cols-12 gap-8 items-center">
+          {/* Timeline Items */}
+          {timelineData.map((item, index) => {
+            const isLeft = index % 2 === 0;
+            const isActive = activeIndex === index;
             
-            {/* LEFT: Editorial Text Block */}
-            <div className="col-span-12 lg:col-span-6 space-y-10">
-              <div className="space-y-4">
-                <div className="flex items-center gap-4 slide-fade">
-                  <span className="w-8 h-[2px] bg-[#E32219]" />
-                  <span className="text-[10px] font-medium uppercase tracking-[0.4em] text-gray-400">Est. 2008 · Chennai, India</span>
+            return (
+              <div
+                key={index}
+                ref={(el) => (itemsRef.current[index] = el)}
+                className={`relative flex flex-col md:flex-row items-start gap-6 md:gap-12 mb-20 md:mb-32 ${
+                  isLeft ? "md:flex-row" : "md:flex-row-reverse"
+                }`}
+              >
+                {/* Timeline Marker with Liquid Effect */}
+                <div className="absolute left-[26px] md:left-1/2 transform md:-translate-x-1/2 z-20">
+                  <motion.div
+                    className="cursor-pointer relative"
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={(e) => triggerExplosion(e, index)}
+                  >
+                    <motion.div
+                      className="timeline-marker w-4 h-4 rounded-full"
+                      style={{ backgroundColor: item.color, boxShadow: `0 0 15px ${item.color}` }}
+                      animate={{
+                        scale: isActive ? [1, 1.3, 1] : 1,
+                        boxShadow: isActive ? [`0 0 15px ${item.color}`, `0 0 30px ${item.color}`, `0 0 15px ${item.color}`] : `0 0 15px ${item.color}`,
+                      }}
+                      transition={{ duration: 1, repeat: isActive ? Infinity : 0 }}
+                    />
+                    <motion.div
+                      className="timeline-marker-glow absolute inset-0 w-4 h-4 rounded-full"
+                      style={{ backgroundColor: item.color }}
+                      animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0.1, 0.3] }}
+                      transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                    />
+                  </motion.div>
                 </div>
 
-                <h1 className="slide-heading text-[8.5vw] font-light text-gray-900 leading-[0.88] tracking-tight uppercase">
-                  Crafting<br />
-                  <span className="font-normal text-[#E32219] relative">
-                    History.
-                    <span className="absolute -bottom-2 left-0 w-full h-px bg-linear-to-r from-[#E32219]/60 to-transparent" />
-                  </span>
-                </h1>
-              </div>
-
-              <p className="text-lg lg:text-xl text-gray-500 font-light leading-relaxed max-w-md tracking-wide slide-fade">
-                17 years of manufacturing excellence, redefining the possibilities of label printing in India with precision and innovation.
-              </p>
-
-              {/* Animated Stats Row */}
-              <div className="grid grid-cols-3 gap-6 pt-4 border-t border-gray-100 slide-fade">
-                {[
-                  { num: "2B+", label: "Labels Printed" },
-                  { num: "17", label: "Years of Growth" },
-                  { num: "ISO", label: "9001:2015 Cert." },
-                ].map((s, i) => (
-                  <div key={i} className="flex flex-col gap-1">
-                    <span className="text-3xl lg:text-4xl font-light text-gray-900 tracking-tighter leading-none">{s.num}</span>
-                    <span className="text-[10px] font-medium text-gray-400 uppercase tracking-[0.3em] leading-tight">{s.label}</span>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-6 group cursor-pointer slide-fade">
-                <div className="relative px-10 py-4 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-[0.25em] rounded-sm group overflow-hidden shadow-xl transition-all duration-300">
-                  <span className="relative z-10 flex items-center gap-4">
-                    Explore Journey
-                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                  </span>
-                  <div className="absolute inset-0 bg-[#E32219] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                </div>
-                <div className="flex flex-col gap-1 slide-fade">
-                  <span className="text-[9px] font-bold text-gray-300 uppercase tracking-widest">Scroll to navigate</span>
-                  <div className="flex gap-1">
-                    {[0,1,2].map(i => (
-                      <div key={i} className="size-1 rounded-full bg-gray-200 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* RIGHT: Clean Asymmetric Image Grid */}
-            <div className="col-span-12 lg:col-span-6 hidden lg:grid grid-cols-2 grid-rows-2 gap-4 h-[72vh] slide-fade">
-              
-              {/* Main tall image — left column spans 2 rows */}
-              <div className="row-span-2 relative rounded-3xl overflow-hidden shadow-2xl shadow-gray-200/80 group">
-                <Image 
-                  src={timelineData[0].image} 
-                  alt="2008 Foundation" 
-                  fill 
-                  className="object-cover group-hover:scale-105 transition-transform duration-[3s]" 
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-gray-900/60 via-gray-900/10 to-transparent" />
-                <div className="absolute bottom-6 left-6 space-y-1">
-                  <span className="text-[9px] font-bold text-white/60 uppercase tracking-[0.4em] block">Foundation Year</span>
-                  <span className="text-4xl font-light text-white tracking-tighter leading-none">2008</span>
-                </div>
-                <div className="absolute top-5 right-5 px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full">
-                  <span className="text-[9px] font-bold text-white uppercase tracking-widest">Origin</span>
-                </div>
-              </div>
-
-              {/* Top-right image */}
-              <div className="relative rounded-3xl overflow-hidden shadow-xl shadow-gray-200/60 group border border-gray-100">
-                <Image 
-                  src={timelineData[2].image} 
-                  alt="2014 Flexo Leap" 
-                  fill 
-                  className="object-cover group-hover:scale-105 transition-transform duration-[3s]" 
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-gray-900/50 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="text-xl font-light text-white tracking-tighter">2014</span>
-                  <p className="text-[8px] text-white/60 uppercase tracking-widest font-bold">Flexo Leap</p>
-                </div>
-              </div>
-
-              {/* Bottom-right image */}
-              <div className="relative rounded-3xl overflow-hidden shadow-xl shadow-gray-200/60 group border border-gray-100">
-                <Image 
-                  src={timelineData[5].image} 
-                  alt="2025 Nilpeter" 
-                  fill 
-                  className="object-cover group-hover:scale-105 transition-transform duration-[3s]" 
-                />
-                <div className="absolute inset-0 bg-[#E32219]/20 mix-blend-multiply" />
-                <div className="absolute inset-0 bg-linear-to-t from-gray-900/50 to-transparent" />
-                <div className="absolute bottom-4 left-4">
-                  <span className="text-xl font-light text-white tracking-tighter">2025</span>
-                  <p className="text-[8px] text-white/60 uppercase tracking-widest font-bold">Present</p>
-                </div>
-                {/* Live indicator */}
-                <div className="absolute top-4 right-4 flex items-center gap-2 px-3 py-1.5 bg-[#E32219] rounded-full shadow-lg shadow-red-200">
-                  <div className="size-1.5 rounded-full bg-white animate-pulse" />
-                  <span className="text-[8px] font-bold text-white uppercase tracking-widest">Now</span>
-                </div>
-              </div>
-
-            </div>
-
-
-          </div>
-        </div>
-
-        {/* MILESTONE SLIDES */}
-        {timelineData.map((item, idx) => (
-          <div key={idx} className="tl-slide flex-shrink-0 w-[90vw] lg:w-screen h-screen flex items-center px-12 lg:px-24 relative overflow-hidden">
-
-            {/* ── KINETIC INDUSTRIAL BACKGROUND (WOW MOMENT) ── */}
-            <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
-              
-              {/* Floating Aura Blobs */}
-              <div className="absolute -top-[10%] -left-[10%] w-[50%] h-[50%] bg-[#E32219]/[0.03] rounded-full blur-[140px] animate-pulse" />
-              <div className="absolute -bottom-[10%] -right-[10%] w-[50%] h-[50%] bg-gray-100/40 rounded-full blur-[140px]" />
-
-              {/* Drifting Technical Grid */}
-              <div className="absolute inset-0 bg-[radial-gradient(#e5e7eb_1.5px,transparent_1.5px)] [background-size:60px_60px] opacity-[0.15] animate-[drift_30s_linear_infinite]" />
-              
-              {/* Scroll-Synced Mechanical Gear */}
-              <div className="year-bg absolute -right-20 -bottom-20 size-[700px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000">
-                <svg viewBox="0 0 100 100" className="w-full h-full text-gray-100 fill-current">
-                   <path d="M50 0c-1.3 0-2.5 1-2.7 2.3l-1.2 7.1c-2.4.6-4.6 1.6-6.7 2.8l-5.6-4.5c-1-.8-2.5-.7-3.4.2l-4.2 4.2c-.9.9-1 2.4-.2 3.4l4.5 5.6c-1.2 2.1-2.2 4.3-2.8 6.7l-7.1 1.2c-1.3.2-2.3 1.4-2.3 2.7v6c0 1.3 1 2.5 2.3 2.7l7.1 1.2c.6 2.4 1.6 4.6 2.8 6.7l-4.5 5.6c-.8 1-.7 2.5.2 3.4l4.2 4.2c.9.9 2.4 1 3.4.2l5.6-4.5c2.1 1.2 4.3 2.2 6.7 2.8l1.2 7.1c.2 1.3 1.4 2.3 2.7 2.3h6c1.3 0 2.5-1 2.7-2.3l1.2-7.1c2.4-.6 4.6-1.6 6.7-2.8l5.6 4.5c1 .8 2.5.7 3.4-.2l4.2-4.2c.9-.9 1-2.4.2-3.4l-4.5-5.6c1.2-2.1 2.2-4.3 2.8-6.7l7.1-1.2c1.3-.2 2.3-1.4 2.3-2.7v-6c0-1.3-1-2.5-2.3-2.7l-7.1-1.2c-.6-2.4-1.6-4.6-2.8-6.7l4.5-5.6c.8-1 .7-2.5-.2-3.4l-4.2-4.2c-.9-.9-2.4-1-3.4-.2l-5.6 4.5c-2.1-1.2-4.3-2.2-6.7-2.8l-1.2-7.1c-.2-1.3-1.4-2.3-2.7-2.3h-6zm0 30a20 20 0 1 1 0 40 20 20 0 0 1 0-40z" />
-                </svg>
-              </div>
-
-              {/* Vertical Data Stream */}
-              <div className="absolute left-[8%] top-0 bottom-0 w-px bg-linear-to-b from-transparent via-gray-200 to-transparent hidden xl:block">
-                <div className="flex flex-col gap-12 py-10 animate-[v-slide_25s_linear_infinite]">
-                  {Array.from({ length: 15 }).map((_, i) => (
-                    <span key={i} className="text-[7px] font-mono text-gray-300 -rotate-90 whitespace-nowrap uppercase tracking-[0.5em] font-black opacity-30">
-                      SYSTEM_ANALYSIS // {item.year} // 0{idx + 1} // PRECISION_ACTIVE
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Horizontal Scanning Line */}
-              <div className="absolute top-0 bottom-0 left-1/2 w-px bg-linear-to-b from-transparent via-[#E32219]/30 to-transparent animate-[h-scan_10s_ease-in-out_infinite]" />
-            </div>
-
-            {/* Parallax Giant Year */}
-            <div className="year-bg absolute inset-0 flex items-center pointer-events-none select-none overflow-hidden">
-              <span className="text-[40vw] font-black tracking-tighter text-gray-900 opacity-0 leading-none whitespace-nowrap pl-12 scale-110">
-                {item.year}
-              </span>
-            </div>
-
-            <div className="card-inner relative z-10 w-full max-w-7xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24 items-center">
-
-              {/* IMAGE CARD — BLUEPRINT STYLE */}
-              <div className="relative group">
-                <div className="relative aspect-[4/3] rounded-3xl overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.08)] bg-gray-50 border border-gray-100/50 p-2">
-                  <div className="relative w-full h-full rounded-2xl overflow-hidden">
-                    <div className="card-image w-full h-full">
-                      <Image
-                        src={item.image}
-                        alt={item.title}
-                        fill
-                        className="object-cover transition-transform duration-[5s] ease-out group-hover:scale-110 saturate-[0.9] hover:saturate-100"
-                        sizes="50vw"
-                        priority={idx < 2}
-                      />
-                    </div>
-                    
-                    {/* Atmospheric Overlays */}
-                    <div className="absolute inset-0 bg-linear-to-t from-gray-900/60 via-transparent to-black/10 z-10" />
-                    
-                    {/* Technical HUD Corners */}
-                    <div className="absolute top-4 left-4 size-8 border-t border-l border-white/40 z-20" />
-                    <div className="absolute bottom-4 right-4 size-8 border-b border-r border-white/40 z-20" />
-
-                    {/* High-End Stat Chip */}
-                    <div className="absolute bottom-6 right-6 z-30 px-5 py-3 bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl shadow-2xl transition-all duration-500 group-hover:bg-white group-hover:border-white group-hover:-translate-y-2 group group-hover:shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
-                      <div className="flex items-center gap-3">
-                        <div className="relative size-8 rounded-lg bg-[#E32219] flex items-center justify-center text-white shadow-[0_0_15px_rgba(227,34,25,0.4)]">
-                          <Target size={14} />
-                          <div className="absolute -top-0.5 -right-0.5 size-2 rounded-full bg-white animate-pulse" />
+                {/* Liquid Glass Card */}
+                <div className="w-full md:w-[calc(50%-2rem)] ml-[52px] md:ml-0">
+                  <LiquidGlassCard
+                    isActive={isActive}
+                    color={item.color}
+                    index={index}
+                    isLeft={isLeft}
+                  >
+                    <div className="relative">
+                      {/* Image Container with Liquid Reveal */}
+                      <motion.div
+                        className="relative rounded-xl overflow-hidden mb-6 h-48 md:h-56"
+                        whileHover={{ scale: 1.02 }}
+                        transition={{ duration: 0.4 }}
+                      >
+                        {!loadedImages[index] && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                            <motion.div
+                              className="w-6 h-6 border-2 border-[#E32219] border-t-transparent rounded-full"
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            />
+                          </div>
+                        )}
+                        <div className={`w-full h-full relative transition-all duration-700 ${
+                          loadedImages[index] ? 'opacity-100' : 'opacity-40'
+                        }`}>
+                          <Image
+                            src={item.image}
+                            alt={item.title}
+                            fill
+                            sizes="(max-width: 768px) 100vw, 33vw"
+                            className="object-cover"
+                            onLoad={() => handleImageLoad(index)}
+                          />
                         </div>
-                        <div>
-                          <p className="text-[7px] font-bold text-white/50 group-hover:text-gray-400 uppercase tracking-[0.2em] leading-none mb-1">Peak Logic</p>
-                          <p className="text-xs font-black text-white group-hover:text-gray-900 tracking-tight leading-none">{item.stat}</p>
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"
+                          initial={{ opacity: 0.5 }}
+                          whileHover={{ opacity: 0.8 }}
+                          transition={{ duration: 0.3 }}
+                        />
+                        
+                        {/* Liquid Shine Overlay */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          animate={{
+                            x: ["-100%", "200%"],
+                          }}
+                          transition={{
+                            duration: 3,
+                            repeat: Infinity,
+                            ease: "easeInOut",
+                            repeatDelay: 2,
+                          }}
+                        />
+                      </motion.div>
+
+                      {/* Content */}
+                      <div className="relative">
+                        {/* Massive Flying Watermark Year - Accelerated Punchy Reveal */}
+                        <div className={`absolute inset-x-0 bottom-0 top-0 flex items-center justify-center pointer-events-none z-[-1] overflow-visible ${
+                          isLeft ? "md:justify-start md:pl-12" : "md:justify-end md:pr-12"
+                        }`}>
+                          <motion.div 
+                            className="text-white font-black text-[12rem] md:text-[18rem] leading-none select-none group-hover:text-[#E32219] transition-all duration-1000 whitespace-nowrap overflow-visible"
+                            initial={{ opacity: 0, scale: 0.8, x: isLeft ? -150 : 150, rotate: isLeft ? -10 : 10 }}
+                            whileInView={{ opacity: 0.1, scale: 1.3, x: 0, rotate: 0 }}
+                            viewport={{ once: false, amount: 0.1 }}
+                            transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                          >
+                             {item.year.split(' ').pop()}
+                          </motion.div>
                         </div>
+
+                        <motion.div
+                          className="inline-block text-xs font-medium mb-4 px-3 py-1 rounded-full bg-white/5 border border-white/10"
+                          style={{ color: item.color }}
+                          whileHover={{ scale: 1.05 }}
+                        >
+                          {item.year}
+                        </motion.div>
+                        
+                        <div className="flex items-center gap-4 mb-4">
+                          {/* Restored Vertical Indicator */}
+                          <div className="w-1 h-8 bg-[#E32219] rounded-full" />
+                          <motion.h3
+                            className="text-xl md:text-2xl font-medium text-white tracking-tight"
+                            initial={{ opacity: 0, x: -20 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 + 0.3 }}
+                          >
+                            {item.title}
+                          </motion.h3>
+                        </div>
+                        
+                        <motion.p
+                          className="text-white text-sm md:text-base leading-relaxed font-normal mb-6 tracking-wide drop-shadow-[0_2px_4px_rgba(0,0,0,1)]"
+                          initial={{ opacity: 0 }}
+                          whileInView={{ opacity: 1 }}
+                          transition={{ delay: index * 0.1 + 0.5 }}
+                        >
+                          {item.description}
+                        </motion.p>
+
+                        {/* Decorative Liquid Line */}
+                        <motion.div
+                          className="mt-6 pt-4 border-t border-white/5"
+                          initial={{ width: 0 }}
+                          whileInView={{ width: "100%" }}
+                          transition={{ delay: index * 0.1 + 0.6, duration: 0.8 }}
+                        >
+                          <motion.div
+                            className="w-12 h-px bg-gradient-to-r from-[#E32219] to-transparent"
+                            animate={{ width: ["0%", "100%", "0%"] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", repeatDelay: 1 }}
+                          />
+                        </motion.div>
                       </div>
                     </div>
-
-                    {/* Year Watermark */}
-                    <div className="absolute top-8 left-8 z-20 opacity-40 group-hover:opacity-100 transition-opacity duration-700">
-                      <span className="text-6xl font-black italic text-white tracking-tighter leading-none">{item.year}</span>
-                    </div>
-                  </div>
+                  </LiquidGlassCard>
                 </div>
 
-                {/* Ambient Glow */}
-                <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-[#E32219]/5 rounded-full blur-[100px] -z-10 animate-pulse" />
+                <div className="hidden md:block w-[calc(50%-2rem)]" />
               </div>
-
-              {/* CONTENT — REFINED EDITORIAL */}
-              <div className="relative space-y-10 lg:pl-4">
-                
-                {/* Visual Blueprint Brackets */}
-                <div className="absolute -left-8 top-0 bottom-0 w-px bg-linear-to-b from-transparent via-gray-100 to-transparent hidden lg:block" />
-
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4 slide-fade">
-                    <div className="size-2 rounded-full bg-[#E32219]" />
-                    <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-[#E32219] italic">{item.date}</span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <h2 className="slide-heading text-5xl lg:text-[5vw] font-light text-gray-900 leading-[0.9] tracking-tighter uppercase">
-                      {item.title.split(' ').map((word, i) => (
-                        <span key={i} className="inline-block mr-3">
-                          {i === 1
-                            ? <span className="font-normal text-[#E32219]">{word}</span>
-                            : word}
-                        </span>
-                      ))}
-                    </h2>
-                    <div className="h-px w-24 bg-[#E32219]/60 slide-fade" />
-                  </div>
-
-                  <p className="text-lg text-gray-500 font-light leading-relaxed max-w-md tracking-wide slide-fade opacity-80 decoration-gray-100">
-                    {item.description}
-                  </p>
-
-                  {/* Technical Spec List */}
-                  <div className="grid grid-cols-1 gap-3 pt-4 slide-fade">
-                    {item.details.map((detail, dIdx) => (
-                      <div key={dIdx} className="flex items-start gap-4 group/item">
-                        <div className="mt-2 h-px w-4 bg-gray-200 group-hover/item:w-6 group-hover/item:bg-[#E32219] transition-all duration-300" />
-                        <span className="text-[11px] text-gray-400 group-hover/item:text-gray-900 font-medium uppercase tracking-[0.15em] transition-colors">{detail}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Footer Chip */}
-                <div className="flex items-center gap-6 slide-fade">
-                  <span className="px-6 py-2.5 border border-gray-100 bg-gray-50/50 text-[#E32219] text-[9px] font-black uppercase tracking-[0.4em] rounded-sm shadow-sm hover:shadow-md transition-all duration-500">
-                    {item.label}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-px bg-gray-100" />
-                    <span className="text-[10px] font-bold text-gray-300 tracking-[0.3em] font-mono">{idx + 1} // 0{timelineData.length}</span>
-                  </div>
-                </div>
-
-                {/* Background Coordinate Decoration */}
-                <div className="absolute bottom-0 right-0 opacity-[0.03] select-none pointer-events-none hidden lg:block">
-                  <span className="text-8xl font-black tracking-tighter leading-none">PRECISION_SYSTEM_v1.0</span>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        ))}
-
-        {/* OUTRO SLIDE */}
-        <div className="tl-slide flex-shrink-0 w-screen h-screen flex items-center justify-center px-12">
-          <div className="card-inner text-center space-y-8 max-w-2xl">
-            <div className="relative size-24 mx-auto">
-              <div className="absolute inset-0 rounded-full bg-[#E32219]/5 scale-[2] animate-pulse" />
-              <div className="h-full w-full rounded-full bg-[#E32219]/10 border border-[#E32219]/20 flex items-center justify-center shadow-xl">
-                <Award size={36} className="text-[#E32219]" />
-              </div>
-            </div>
-            <h2 className="text-6xl lg:text-[6vw] font-light text-gray-900 tracking-tight leading-none uppercase slide-fade">
-              Vision for the <br />
-              <span className="font-normal text-[#E32219]">Future.</span>
-            </h2>
-            <p className="text-xl text-gray-500 font-light leading-relaxed max-w-xl mx-auto tracking-wide slide-fade">
-              Our story doesn&apos;t end here. Every milestone is a new beginning as we continue to push the boundaries of precision printing.
-            </p>
-            <div className="slide-fade">
-              <button className="relative px-12 py-4 bg-gray-900 text-white text-[10px] font-bold uppercase tracking-[0.25em] rounded-sm group overflow-hidden shadow-xl transition-all duration-300 hover:scale-105">
-                <span className="relative z-10 flex items-center gap-4">
-                  Partner With Us
-                  <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </span>
-                <div className="absolute inset-0 bg-[#E32219] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-              </button>
-            </div>
-          </div>
+            );
+          })}
         </div>
 
-      </div>
-
-      {/* MOBILE */}
-      <div className="lg:hidden px-6 pt-28 pb-24 space-y-16 bg-white relative z-20">
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-[2px] bg-[#E32219]" />
-            <span className="text-[10px] font-medium uppercase tracking-[0.4em] text-gray-500">Our Journey</span>
-          </div>
-          <h2 className="text-5xl font-light text-gray-900 leading-tight tracking-tight uppercase">
-            Crafting <span className="font-normal text-[#E32219]">History.</span>
-          </h2>
-        </div>
-        {timelineData.map((item, idx) => (
-          <div key={idx} className="space-y-5 pb-10 border-b border-gray-100">
-            <div className="relative aspect-video rounded-2xl overflow-hidden shadow-md">
-              <Image src={item.image} alt={item.title} fill className="object-cover" />
-              <div className="absolute inset-0 bg-linear-to-t from-gray-900/40 to-transparent" />
-              <div className="absolute top-5 left-5 text-4xl font-light text-white/70 tracking-tighter">{item.year}</div>
-            </div>
-            <div className="space-y-3 px-1">
-              <div className="flex items-center gap-3">
-                <Calendar size={12} className="text-[#E32219]" />
-                <span className="text-[9px] font-medium uppercase tracking-[0.4em] text-gray-400">{item.date}</span>
+        {/* Footer with Liquid Glass Effect */}
+        <motion.div
+          className="mt-32 pt-12 text-center relative"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div
+            className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-[#E32219] to-transparent"
+            animate={{ scaleY: [0.5, 1, 0.5] }}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+          
+          <div className="relative max-w-3xl mx-auto">
+            <motion.div
+              className="relative bg-black/40 backdrop-blur-sm rounded-2xl p-8 md:p-10 border border-white/5 overflow-hidden"
+              whileHover={{ scale: 1.02 }}
+              transition={{ duration: 0.3 }}
+            >
+              <motion.div
+                className="absolute inset-0 bg-gradient-to-r from-[#E32219]/0 via-[#E32219]/10 to-[#E32219]/0"
+                animate={{ x: ["-100%", "100%"] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              />
+              
+              <div className="relative">
+                <motion.div
+                  className="text-6xl text-[#E32219]/20 mb-2 font-serif"
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                >
+                  “
+                </motion.div>
+                <p className="text-gray-300 text-lg md:text-xl font-light leading-relaxed">
+                  "Success is not only about expansion — it is about earning trust,
+                  maintaining quality, and keeping the promises we make."
+                </p>
+                <div className="mt-6 flex justify-center items-center gap-3">
+                  <div className="w-12 h-px bg-gradient-to-r from-transparent to-[#E32219]" />
+                  <motion.div
+                    className="w-1.5 h-1.5 rounded-full bg-[#E32219]"
+                    animate={{ scale: [1, 1.5, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                  <div className="w-12 h-px bg-gradient-to-l from-transparent to-[#E32219]" />
+                </div>
+                <p className="text-[#E32219] mt-4 font-medium tracking-wider text-sm">
+                  TRRIDEV LABELSS MFG CO
+                </p>
               </div>
-              <h3 className="text-3xl font-light text-gray-900 tracking-tight">{item.title}</h3>
-              <p className="text-gray-600 text-base font-light leading-relaxed tracking-wide">{item.description}</p>
-              <span className="inline-block px-4 py-1.5 border border-[#E32219]/30 text-[#E32219] text-[9px] font-bold uppercase tracking-[0.4em] rounded-sm">{item.label}</span>
-            </div>
+            </motion.div>
           </div>
-        ))}
+        </motion.div>
       </div>
 
+      <style jsx>{`
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0) rotate(0deg); }
+          50% { transform: translateY(-20px) rotate(5deg); }
+        }
+
+        .animate-float-slow {
+          animation: float-slow 12s ease-in-out infinite;
+        }
+        
+        .timeline-card {
+          transform-style: preserve-3d;
+          will-change: transform;
+        }
+      `}</style>
     </section>
   );
 }

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from 'react';
 import { 
   BarChart3, 
@@ -142,7 +142,7 @@ const DashboardPage = () => {
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-bold text-slate-500 shadow-sm ring-1 ring-slate-100">
             <Calendar size={14} />
-            <span>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
+            <span suppressHydrationWarning>{new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</span>
           </div>
         </div>
       </div>
@@ -235,7 +235,7 @@ const DashboardPage = () => {
                           </span>
                         </td>
                         <td className="py-5 text-right">
-                          <p className="text-xs font-bold text-slate-900">{new Date(lead.createdAt).toLocaleDateString()}</p>
+                          <p className="text-xs font-bold text-slate-900" suppressHydrationWarning>{new Date(lead.createdAt).toLocaleDateString()}</p>
                         </td>
                       </tr>
                     ))

@@ -45,7 +45,7 @@ const StepProgress = ({ currentStep }) => {
 
         return (
           <React.Fragment key={step.key}>
-            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all duration-500
+            <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold tracking-tight uppercase whitespace-nowrap transition-all duration-500
               ${isActive ? 'bg-red-600 text-white shadow-lg shadow-red-100' 
                 : isDone ? 'bg-emerald-50 text-emerald-600' 
                 : 'text-slate-300'}`}
@@ -70,7 +70,8 @@ export default function ChatWidget() {
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [userDetails, setUserDetails] = useState({ name: '', phone: '', email: '' });
-  const [visitorId, setVisitorId] = useState(null);
+  // Generate a fresh visitor ID in-memory every page load — no localStorage persistence
+  const [visitorId] = useState(() => 'visitor_' + Math.random().toString(36).substring(2, 11));
   const [hasGreeted, setHasGreeted] = useState(false);
   const [isClosed, setIsClosed] = useState(false);
   const [isBotTyping, setIsBotTyping] = useState(false);
@@ -102,15 +103,8 @@ export default function ChatWidget() {
     fetchFaqs();
   }, []);
 
-  // Initialize Visitor ID
-  useEffect(() => {
-    let storedId = localStorage.getItem('tridev_visitor_id');
-    if (!storedId) {
-      storedId = 'visitor_' + Math.random().toString(36).substring(2, 11);
-      localStorage.setItem('tridev_visitor_id', storedId);
-    }
-    setVisitorId(storedId);
-  }, []);
+  // visitorId is generated fresh in useState() above — no localStorage needed.
+
 
   // Initialize Socket
   useEffect(() => {
@@ -171,8 +165,8 @@ export default function ChatWidget() {
   useEffect(() => {
     if (isOpen) setUnreadCount(0);
     else if (!hasGreeted) {
-        // Auto-open logic
-        const timer = setTimeout(() => setIsOpen(true), 4000);
+        // Auto-open logic - Delayed for 90+ Lighthouse Performance
+        const timer = setTimeout(() => setIsOpen(true), 12000);
         return () => clearTimeout(timer);
     }
   }, [isOpen, hasGreeted]);

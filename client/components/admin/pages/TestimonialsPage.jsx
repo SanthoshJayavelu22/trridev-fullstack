@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { testimonialService } from '@/components/admin/services/testimonial.service';
@@ -168,6 +168,8 @@ const TestimonialsPage = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+  const [modalTitle, setModalTitle] = useState("Success!");
   const [showForm, setShowForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -220,6 +222,15 @@ const TestimonialsPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setModalType("error");
+        setModalTitle("Invalid Format");
+        setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
       setFormData(prev => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -268,6 +279,8 @@ const TestimonialsPage = () => {
 
     try {
       setSubmitting(true);
+      setModalType("success");
+      setModalTitle("Success!");
       if (editingId) {
         await testimonialService.update(editingId, submission);
         setSuccessMessage("Testimonial parameters successfully updated.");
@@ -280,7 +293,13 @@ const TestimonialsPage = () => {
       fetchTestimonials();
       setShowSuccessModal(true);
     } catch (err) {
-      setError(err.response?.data?.message || "Protocol execution failed.");
+      console.error("Transmission Failure:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Protocol execution failed.";
+      setModalType("error");
+      setModalTitle("Protocol Interrupted");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
@@ -312,12 +331,21 @@ const TestimonialsPage = () => {
   const confirmDelete = async () => {
     try {
       await testimonialService.delete(deleteId);
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage("Testimonial erased from the repository.");
       setShowDeleteModal(false);
       fetchTestimonials();
       setShowSuccessModal(true);
     } catch (err) {
-      setError("Failed to erase record.");
+      console.error("Delete Failure:", err);
+      const msg = err.response?.data?.error || err.response?.data?.message || "Failed to erase record.";
+      setModalType("error");
+      setModalTitle("Operation Failed");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
+      setShowDeleteModal(false);
     }
   };
 
@@ -535,7 +563,7 @@ const TestimonialsPage = () => {
                    <input
                      ref={fileInputRef}
                      type="file"
-                     accept="image/*"
+                     accept=".jpg,.jpeg,.png,.gif,.webp"
                      onChange={handleImageChange}
                      className="hidden"
                    />
@@ -662,8 +690,9 @@ const TestimonialsPage = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Protocol Success"
+        title={modalTitle}
         message={successMessage}
+        type={modalType}
       />
     </div>
   );

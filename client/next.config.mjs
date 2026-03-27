@@ -16,25 +16,53 @@ const nextConfig = {
       },
       {
         protocol: 'https',
-        hostname: 'i.pinimg.com',
+        hostname: '**.pinimg.com',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.unsplash.com',
+        pathname: '/**',
       },
       {
         protocol: 'http',
         hostname: 'localhost',
         port: '5000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '5001',
+        pathname: '/**',
       },
       {
         protocol: 'http',
         hostname: '127.0.0.1',
         port: '5000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '5001',
+        pathname: '/**',
       },
       {
         protocol: 'http',
         hostname: '::1',
         port: '5000',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '::1',
+        port: '5001',
+        pathname: '/**',
       }
     ],
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
+    qualities: [25, 30, 40, 50, 60, 75, 80, 90, 100],
   },
   // Performance optimizations for development and build
   experimental: {

@@ -8,165 +8,98 @@ import { quoteService } from '@/services/quote.service';
 
 gsap.registerPlugin(ScrollTrigger);
 
-// Validation functions
-const validateEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-};
+const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
 const validateIndianPhone = (phone) => {
-  // Remove all non-digit characters
   const digitsOnly = phone.replace(/\D/g, '');
-  // Indian phone numbers should be 10 digits, starting with 6-9
   return /^[6-9]\d{9}$/.test(digitsOnly);
 };
 
 const formatIndianPhone = (value) => {
-  // Remove all non-digit characters
-  const digitsOnly = value.replace(/\D/g, '');
-  
-  // Limit to 10 digits
-  const limitedDigits = digitsOnly.slice(0, 10);
-  
-  // Format as: +91 XXXXX XXXXX
-  if (limitedDigits.length === 0) return '';
-  if (limitedDigits.length <= 5) return limitedDigits;
-  return `${limitedDigits.slice(0, 5)} ${limitedDigits.slice(5)}`;
+  const digitsOnly = value.replace(/\D/g, '').slice(0, 10);
+  if (digitsOnly.length === 0) return '';
+  if (digitsOnly.length <= 5) return digitsOnly;
+  return `${digitsOnly.slice(0, 5)} ${digitsOnly.slice(5)}`;
 };
+
+const inputBase =
+  'w-full rounded-xl border bg-gray-50 px-4 py-3.5 text-gray-900 text-base placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all duration-300';
+const inputNormal = `${inputBase} border-gray-200 focus:border-[#E32219] focus:ring-[#E32219]/10`;
+const inputError  = `${inputBase} border-red-400 focus:border-red-500 focus:ring-red-100`;
+
+const FieldGroup = ({ label, error, children }) => (
+  <div className="flex flex-col gap-1.5">
+    <label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+      {label}
+    </label>
+    {children}
+    {error && (
+      <p className="text-xs font-medium text-red-500 mt-0.5">{error}</p>
+    )}
+  </div>
+);
 
 export default function ContactSection() {
   const containerRef = useRef(null);
-  const headerRef = useRef(null);
-  const formRef = useRef(null);
-  const infoRef = useRef(null);
-  const nameInputRef = useRef(null);
-  const emailInputRef = useRef(null);
-  const phoneInputRef = useRef(null);
-  const messageInputRef = useRef(null);
+  const headerRef    = useRef(null);
+  const formRef      = useRef(null);
+  const infoRef      = useRef(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Header Animation
-      gsap.fromTo(headerRef.current.children, 
+      gsap.fromTo(
+        headerRef.current.children,
         { y: 30, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 1,
-          stagger: 0.1,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: headerRef.current,
-            start: "top 90%"
-          }
-        }
+        { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out',
+          scrollTrigger: { trigger: headerRef.current, start: 'top 90%' } }
       );
-
-      // Info Cards Animation
-      gsap.fromTo(".contact-card", 
+      gsap.fromTo(
+        '.contact-card',
         { y: 50, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.8,
-          stagger: 0.2,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: infoRef.current,
-            start: "top 90%" // Triggers sooner
-          }
-        }
+        { y: 0, opacity: 1, duration: 0.8, stagger: 0.2, ease: 'power3.out',
+          scrollTrigger: { trigger: infoRef.current, start: 'top 90%' } }
       );
-
-      // Form Animation
-      gsap.fromTo(formRef.current, 
+      gsap.fromTo(
+        formRef.current,
         { x: 30, opacity: 0 },
-        {
-          x: 0,
-          opacity: 1,
-          duration: 1,
-          ease: "power3.out",
-          delay: 0.2,
-          scrollTrigger: {
-            trigger: formRef.current,
-            start: "top 85%"
-          }
-        }
+        { x: 0, opacity: 1, duration: 1, ease: 'power3.out', delay: 0.2,
+          scrollTrigger: { trigger: formRef.current, start: 'top 85%' } }
       );
-
     }, containerRef);
     return () => ctx.revert();
   }, []);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: ''
-  });
-  const [errors, setErrors] = useState({});
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', subject: '', message: '' });
+  const [errors,   setErrors]   = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState(null); // 'success' | 'error' | null
+  const [submitStatus, setSubmitStatus] = useState(null);
 
-  const triggerVibrateAnimation = (inputRef) => {
-    if (inputRef.current) {
-      inputRef.current.classList.add('animate-vibrate');
-      setTimeout(() => {
-        inputRef.current.classList.remove('animate-vibrate');
-      }, 500);
-    }
+  const set = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors(prev => ({ ...prev, [field]: '' }));
   };
 
   const validateForm = () => {
-    const newErrors = {};
-
-    if (!formData.name.trim()) {
-      newErrors.name = 'Name is required';
-      triggerVibrateAnimation(nameInputRef);
-    }
-
-    if (!formData.email.trim()) {
-      newErrors.email = 'Email is required';
-      triggerVibrateAnimation(emailInputRef);
-    } else if (!validateEmail(formData.email)) {
-      newErrors.email = 'Please enter a valid email';
-      triggerVibrateAnimation(emailInputRef);
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'Phone number is required';
-      triggerVibrateAnimation(phoneInputRef);
-    } else if (!validateIndianPhone(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit Indian phone number';
-      triggerVibrateAnimation(phoneInputRef);
-    }
-
-    if (!formData.message.trim()) {
-      newErrors.message = 'Message is required';
-      triggerVibrateAnimation(messageInputRef);
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const e = {};
+    if (!formData.name.trim())                         e.name    = 'Name is required';
+    if (!formData.email.trim())                        e.email   = 'Email is required';
+    else if (!validateEmail(formData.email))           e.email   = 'Please enter a valid email';
+    if (!formData.phone.trim())                        e.phone   = 'Phone is required';
+    else if (!validateIndianPhone(formData.phone))     e.phone   = 'Enter a valid 10-digit Indian number';
+    if (!formData.message.trim())                      e.message = 'Message is required';
+    setErrors(e);
+    return Object.keys(e).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitStatus(null);
-
-    if (!validateForm()) {
-      setSubmitStatus('validation_error');
-      return;
-    }
-
+    if (!validateForm()) { setSubmitStatus('validation_error'); return; }
     setIsSubmitting(true);
-
     try {
-      const digitsOnly = formData.phone.replace(/\D/g, '');
       await quoteService.submit({
         ...formData,
-        phone: digitsOnly,
+        phone: formData.phone.replace(/\D/g, ''),
         company: formData.subject,
         source: 'contact'
       });
@@ -185,252 +118,207 @@ export default function ContactSection() {
   const contactDetails = [
     {
       icon: <MapPin className="w-5 h-5" />,
-      label: "Operational HQ",
-      value: "Kottivakkam, Chennai",
-      sub: "Door No: A115 & B115, Nehru Nagar 2nd Main Road, 7th Link St, Nehru Nagar Industrial Area, Kottivakkam, OMR, Chennai – 600041, TN, India",
-      actionLabel: "Get Directions",
-      href: "https://www.google.com/maps/place/Trridev+Labelss/@12.974888,80.2475952,17z/data=!3m1!4b1!4m6!3m5!1s0x3a525d68f9088c4d:0xd3a950365da09a38!8m2!3d12.974888!4d80.2475952!16s%2Fg%2F1tr7gt9l?hl=en&entry=ttu"
+      label: 'Operational HQ',
+      value: 'Kottivakkam, Chennai',
+      sub: 'Door No: A115 & B115, Nehru Nagar 2nd Main Road, 7th Link St, Nehru Nagar Industrial Area, Kottivakkam, OMR, Chennai – 600041, TN, India',
+      href: 'https://www.google.com/maps/place/Trridev+Labelss/@12.974888,80.2475952,17z'
     },
     {
       icon: <Phone className="w-5 h-5" />,
-      label: "Call Engineering",
-      value: "+91 96000 07995",
-      sub: "Mobile: +91 99406 22559 | Tel: 044-47839627",
-      actionLabel: "Call Now",
-      href: "tel:+919600007995"
+      label: 'Call Engineering',
+      value: '+91 96000 07995',
+      sub: 'Mobile: +91 99406 22559 | Tel: 044-47839627',
+      href: 'tel:+919600007995'
     },
     {
       icon: <Mail className="w-5 h-5" />,
-      label: "Technical Inquiries",
-      value: "Kiruba@trridevlabelss.com",
-      sub: "General: info@trridevlabels.com",
-      actionLabel: "Send Email",
-      href: "mailto:Kiruba@trridevlabelss.com"
-    },
-    {
-      icon: <Clock className="w-5 h-5" />,
-      label: "Working Hours",
-      value: "10:00 – 18:30",
-      sub: "Monday – Saturday | Sunday: Closed",
-      actionLabel: "Visit Us",
-      href: "#map"
+      label: 'Technical Inquiries',
+      value: 'Kiruba@trridevlabelss.com',
+      sub: 'General: info@trridevlabels.com',
+      href: 'mailto:Kiruba@trridevlabelss.com'
     }
   ];
 
   return (
     <section ref={containerRef} className="py-20 md:py-32 bg-white overflow-hidden relative">
-      {/* Subtle Grid Background from Home Page */}
-      <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
-           style={{
-             backgroundImage: `linear-gradient(45deg, #000 1px, transparent 1px),
-                                 linear-gradient(-45deg, #000 1px, transparent 1px)`,
-             backgroundSize: '40px 40px'
-           }} 
+      {/* Subtle Grid Background */}
+      <div
+        className="absolute inset-0 opacity-[0.02] pointer-events-none"
+        style={{
+          backgroundImage: `linear-gradient(45deg, #000 1px, transparent 1px),
+                            linear-gradient(-45deg, #000 1px, transparent 1px)`,
+          backgroundSize: '40px 40px'
+        }}
       />
 
       <div className="container mx-auto px-6 md:px-12 lg:px-16 relative z-10">
-        
-        {/* Section Header - Styled like Home Page */}
+
+        {/* Section Header */}
         <div ref={headerRef} className="text-center max-w-4xl mx-auto mb-20 md:mb-24">
           <div className="flex items-center justify-center mb-6 md:mb-8">
-            <div className="h-px w-12 bg-linear-to-r from-transparent via-gray-300 to-transparent"></div>
+            <div className="h-px w-12 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
             <div className="mx-4 text-[10px] md:text-xs font-bold uppercase tracking-[0.4em] text-gray-400">
               Get In Touch
             </div>
-            <div className="h-px w-12 bg-linear-to-l from-transparent via-gray-300 to-transparent"></div>
+            <div className="h-px w-12 bg-gradient-to-l from-transparent via-gray-300 to-transparent" />
           </div>
-
           <h2 className="text-4xl md:text-5xl lg:text-7xl font-light text-gray-900 tracking-tight leading-[1.1] mb-6">
-            Let’s start a <br/>
+            Let's start a <br />
             <span className="font-medium text-[#E32219] relative inline-block">
               Conversation.
-              <span className="absolute bottom-1 left-0 w-full h-px bg-linear-to-r from-[#E32219]/0 via-[#E32219]/40 to-[#E32219]/0"></span>
+              <span className="absolute bottom-1 left-0 w-full h-px bg-gradient-to-r from-[#E32219]/0 via-[#E32219]/40 to-[#E32219]/0" />
             </span>
           </h2>
-          
           <p className="text-gray-500 font-light text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Whether you have a complex labeling project or just need technical advice, our team is ready to engineer the perfect solution.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-stretch">
-          
-          {/* Left Column: Contact Info Cards */}
-          <div ref={infoRef} className="lg:col-span-5 flex flex-col gap-6 h-full">
+        {/* Two-Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+
+          {/* Left: Contact Info Cards */}
+          <div ref={infoRef} className="lg:col-span-5 flex flex-col gap-4">
             {contactDetails.map((item, idx) => (
-              <a 
-                key={idx} 
+              <a
+                key={idx}
                 href={item.href}
-                className="contact-card group relative p-8 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-[#E32219]/20 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-500 cursor-pointer overflow-hidden flex-1 flex flex-col justify-center"
+                className="contact-card group relative p-6 rounded-2xl border border-gray-100 bg-gray-50 hover:bg-white hover:border-[#E32219]/20 hover:shadow-xl hover:shadow-gray-100/50 transition-all duration-500 overflow-hidden"
               >
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col gap-4">
-                    <div className="w-10 h-10 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-[#E32219] group-hover:border-[#E32219]/20 transition-all duration-500 shadow-sm">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col gap-3 min-w-0">
+                    <div className="w-9 h-9 rounded-full bg-white border border-gray-100 flex items-center justify-center text-gray-400 group-hover:text-[#E32219] group-hover:border-[#E32219]/20 transition-all duration-500 shadow-sm shrink-0">
                       {item.icon}
                     </div>
-                    <div>
-                      <h4 className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</h4>
-                      <div className="text-xl md:text-2xl font-semibold text-gray-900 leading-tight mb-2 group-hover:text-[#E32219] transition-colors">{item.value}</div>
-                      <p className="text-sm text-gray-500 font-light">{item.sub}</p>
+                    <div className="min-w-0">
+                      <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{item.label}</h4>
+                      <div className="text-lg md:text-xl font-semibold text-gray-900 leading-tight mb-1 group-hover:text-[#E32219] transition-colors break-all">
+                        {item.value}
+                      </div>
+                      <p className="text-sm text-gray-500 font-light leading-relaxed">{item.sub}</p>
                     </div>
                   </div>
-                  
-                  <div className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center text-gray-300 group-hover:bg-[#E32219] group-hover:text-white transition-all duration-500 transform group-hover:-translate-y-1 group-hover:translate-x-1">
+                  <div className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center text-gray-300 group-hover:bg-[#E32219] group-hover:text-white transition-all duration-500 transform group-hover:-translate-y-1 group-hover:translate-x-1 shrink-0 mt-1">
                     <ArrowUpRight className="w-4 h-4" />
                   </div>
                 </div>
               </a>
             ))}
+
+            {/* Working Hours Strip */}
+            <div className="contact-card rounded-2xl bg-[#0a0a0a] px-6 py-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-[#E32219] shrink-0">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-0.5">Working Hours</p>
+                  <p className="text-white font-semibold text-base">Mon – Sat &nbsp;·&nbsp; 10:00 – 18:30</p>
+                </div>
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#E32219] bg-[#E32219]/10 px-3 py-1.5 rounded-full whitespace-nowrap">
+                Sun Closed
+              </span>
+            </div>
           </div>
 
-          {/* Right Column: Elegant Form */}
-          <div ref={formRef} className="lg:col-span-7 h-full">
-            <div className="bg-white p-8 md:p-12 lg:p-14 rounded-[32px] border border-gray-100 shadow-2xl shadow-gray-200/40 relative h-full flex flex-col justify-center">
-              <form onSubmit={handleSubmit} className="space-y-10 relative z-10 w-full">
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="group relative">
-                    <input 
-                      type="text" 
-                      id="name"
-                      ref={nameInputRef}
-                      required
-                      value={formData.name}
-                      onChange={e => {
-                        setFormData({...formData, name: e.target.value});
-                        if (errors.name) setErrors({...errors, name: ''});
-                      }}
-                      className={`peer w-full bg-transparent border-b py-4 text-gray-900 text-lg focus:outline-none transition-colors duration-300 placeholder-transparent ${
-                        errors.name ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#E32219]'
-                      }`}
-                      placeholder="Name"
-                    />
-                    <label 
-                      htmlFor="name"
-                      className={`absolute left-0 -top-3.5 text-xs font-bold uppercase tracking-widest transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:tracking-normal peer-focus:-top-3.5 peer-focus:text-xs peer-focus:font-bold peer-focus:tracking-widest ${
-                        errors.name ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400 peer-focus:text-[#E32219]'
-                      }`}
-                    >
-                      {errors.name || 'Your Name'}
-                    </label>
-                  </div>
+          {/* Right: Form */}
+          <div ref={formRef} className="lg:col-span-7">
+            <div className="bg-white p-8 md:p-10 lg:p-12 rounded-[32px] border border-gray-100 shadow-2xl shadow-gray-200/40">
+              <form onSubmit={handleSubmit} className="space-y-6" noValidate>
 
-                  <div className="group relative">
-                    <input 
-                      type="email" 
-                      id="email"
-                      ref={emailInputRef}
-                      required
-                      value={formData.email}
-                      onChange={e => {
-                        setFormData({...formData, email: e.target.value});
-                        if (errors.email) setErrors({...errors, email: ''});
-                      }}
-                      className={`peer w-full bg-transparent border-b py-4 text-gray-900 text-lg focus:outline-none transition-colors duration-300 placeholder-transparent ${
-                        errors.email ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#E32219]'
-                      }`}
-                      placeholder="Email"
+                {/* Row 1: Name + Email */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <FieldGroup label="Your Name" error={errors.name}>
+                    <input
+                      type="text"
+                      id="name"
+                      value={formData.name}
+                      onChange={e => set('name', e.target.value)}
+                      className={errors.name ? inputError : inputNormal}
+                      placeholder="e.g. John Doe"
                     />
-                    <label 
-                      htmlFor="email"
-                      className={`absolute left-0 -top-3.5 text-xs font-bold uppercase tracking-widest transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:tracking-normal peer-focus:-top-3.5 peer-focus:text-xs peer-focus:font-bold peer-focus:tracking-widest ${
-                        errors.email ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400 peer-focus:text-[#E32219]'
-                      }`}
-                    >
-                      {errors.email || 'Email Address'}
-                    </label>
-                  </div>
+                  </FieldGroup>
+
+                  <FieldGroup label="Email Address" error={errors.email}>
+                    <input
+                      type="email"
+                      id="email"
+                      value={formData.email}
+                      onChange={e => set('email', e.target.value)}
+                      className={errors.email ? inputError : inputNormal}
+                      placeholder="you@example.com"
+                    />
+                  </FieldGroup>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                  <div className="group relative">
-                    <input 
-                      type="tel" 
+                {/* Row 2: Phone + Subject */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <FieldGroup label="Phone Number" error={errors.phone}>
+                    <input
+                      type="tel"
                       id="phone"
-                      ref={phoneInputRef}
-                      required
                       value={formData.phone}
-                      onChange={e => {
-                        const formatted = formatIndianPhone(e.target.value);
-                        setFormData({...formData, phone: formatted});
-                        if (errors.phone) setErrors({...errors, phone: ''});
-                      }}
-                      className={`peer w-full bg-transparent border-b py-4 text-gray-900 text-lg focus:outline-none transition-colors duration-300 placeholder-transparent ${
-                        errors.phone ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#E32219]'
-                      }`}
-                      placeholder="Phone"
+                      onChange={e => set('phone', formatIndianPhone(e.target.value))}
+                      className={errors.phone ? inputError : inputNormal}
+                      placeholder="98765 43210"
                     />
-                    <label 
-                      htmlFor="phone"
-                      className={`absolute left-0 -top-3.5 text-xs font-bold uppercase tracking-widest transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:tracking-normal peer-focus:-top-3.5 peer-focus:text-xs peer-focus:font-bold peer-focus:tracking-widest ${
-                        errors.phone ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400 peer-focus:text-[#E32219]'
-                      }`}
-                    >
-                      {errors.phone || 'Phone Number (10 digits)'}
-                    </label>
-                  </div>
+                  </FieldGroup>
 
-                  <div className="group relative">
-                    <input 
-                      type="text" 
+                  <FieldGroup label="Subject / Company" error={errors.subject}>
+                    <input
+                      type="text"
                       id="subject"
                       value={formData.subject}
-                      onChange={e => setFormData({...formData, subject: e.target.value})}
-                      className="peer w-full bg-transparent border-b border-gray-200 py-4 text-gray-900 text-lg focus:border-[#E32219] focus:outline-none transition-colors duration-300 placeholder-transparent"
-                      placeholder="Subject"
+                      onChange={e => set('subject', e.target.value)}
+                      className={inputNormal}
+                      placeholder="Company or topic"
                     />
-                    <label 
-                      htmlFor="subject"
-                      className="absolute left-0 -top-3.5 text-xs font-bold text-gray-400 uppercase tracking-widest transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:tracking-normal peer-focus:-top-3.5 peer-focus:text-xs peer-focus:text-[#E32219] peer-focus:font-bold peer-focus:tracking-widest"
-                    >
-                      Subject / Company
-                    </label>
-                  </div>
+                  </FieldGroup>
                 </div>
 
-                <div className="group relative">
-                  <textarea 
+                {/* Message */}
+                <FieldGroup label="Project Details" error={errors.message}>
+                  <textarea
                     id="message"
-                    ref={messageInputRef}
-                    rows="4"
-                    required
+                    rows={5}
                     value={formData.message}
-                    onChange={e => {
-                      setFormData({...formData, message: e.target.value});
-                      if (errors.message) setErrors({...errors, message: ''});
-                    }}
-                    className={`peer w-full bg-transparent border-b py-4 text-gray-900 text-lg focus:outline-none transition-colors duration-300 placeholder-transparent resize-none ${
-                      errors.message ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-[#E32219]'
-                    }`}
-                    placeholder="Message"
-                  ></textarea>
-                  <label 
-                    htmlFor="message"
-                    className={`absolute left-0 -top-3.5 text-xs font-bold uppercase tracking-widest transition-all peer-placeholder-shown:text-base peer-placeholder-shown:font-normal peer-placeholder-shown:text-gray-400 peer-placeholder-shown:top-4 peer-placeholder-shown:tracking-normal peer-focus:-top-3.5 peer-focus:text-xs peer-focus:font-bold peer-focus:tracking-widest ${
-                      errors.message ? 'text-red-500 peer-focus:text-red-500' : 'text-gray-400 peer-focus:text-[#E32219]'
-                    }`}
-                  >
-                    {errors.message || 'Details about your project'}
-                  </label>
-                </div>
+                    onChange={e => set('message', e.target.value)}
+                    className={`resize-none ${errors.message ? inputError : inputNormal}`}
+                    placeholder="Describe your labeling requirement in detail..."
+                  />
+                </FieldGroup>
 
-                <div className="pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
-                   <div className="text-sm font-medium">
-                      {submitStatus === 'success' && <span className="text-green-600 flex items-center gap-2 animate-bounce">✓ Message Sent Successfully!</span>}
-                      {submitStatus === 'error' && <span className="text-red-600 flex items-center gap-2">✕ Failed to send. Please try again.</span>}
-                   </div>
-                   <button 
+                {/* Footer */}
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+                  <div className="text-sm font-medium">
+                    {submitStatus === 'success' && (
+                      <span className="text-green-600 flex items-center gap-2">✓ Message Sent Successfully!</span>
+                    )}
+                    {submitStatus === 'error' && (
+                      <span className="text-red-600 flex items-center gap-2">✕ Failed to send. Please try again.</span>
+                    )}
+                    {submitStatus === 'validation_error' && (
+                      <span className="text-amber-600 flex items-center gap-2">⚠ Please fix the errors above.</span>
+                    )}
+                  </div>
+
+                  <button
                     type="submit"
                     disabled={isSubmitting}
-                    className={`group relative inline-flex items-center gap-3 px-10 py-5 rounded-xl transition-all duration-500 shadow-xl overflow-hidden
+                    className={`group relative inline-flex items-center gap-3 px-10 py-4 rounded-xl transition-all duration-500 shadow-xl overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed
                       ${submitStatus === 'success' ? 'bg-green-600' : 'bg-gray-900 hover:bg-[#E32219]'}`}
-                   >
-                     <span className="relative z-10 text-xs font-bold uppercase text-white tracking-[0.2em]">
-                       {isSubmitting ? 'Processing...' : submitStatus === 'success' ? 'Thank You!' : 'Send Message'}
-                     </span>
-                     <Send className={`w-4 h-4 relative z-10 transform text-white transition-transform duration-300 ${isSubmitting ? 'animate-pulse' : 'group-hover:translate-x-1 group-hover:-translate-y-1'}`} />
-                     <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-out"></div>
-                   </button>
+                  >
+                    <span className="relative z-10 text-xs font-bold uppercase text-white tracking-[0.2em]">
+                      {isSubmitting ? 'Processing...' : submitStatus === 'success' ? 'Thank You!' : 'Send Message'}
+                    </span>
+                    <Send
+                      className={`w-4 h-4 relative z-10 text-white transition-transform duration-300 ${
+                        isSubmitting ? 'animate-pulse' : 'group-hover:translate-x-1 group-hover:-translate-y-1'
+                      }`}
+                    />
+                    <div className="absolute inset-0 bg-white/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700 ease-out" />
+                  </button>
                 </div>
 
               </form>
@@ -438,7 +326,6 @@ export default function ContactSection() {
           </div>
 
         </div>
-
       </div>
     </section>
   );

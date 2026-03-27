@@ -26,9 +26,22 @@ const errorHandler = (err, req, res, next) => {
     error = new ErrorResponse(message, 400);
   }
 
-  res.status(error.statusCode || 500).json({
+  // Multer error
+  if (err.name === 'MulterError') {
+    let message = err.message;
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      message = 'Image too large. Maximum size allowed is 5MB.';
+    }
+    error = new ErrorResponse(message, 400);
+  }
+
+  // Handle generic error messages
+  const message = error.message || 'Server Error';
+  const statusCode = error.statusCode || 500;
+
+  res.status(statusCode).json({
     success: false,
-    error: error.message || 'Server Error'
+    error: message
   });
 };
 

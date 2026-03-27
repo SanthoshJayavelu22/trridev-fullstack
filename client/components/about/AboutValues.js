@@ -40,40 +40,34 @@ export default function AboutValues() {
   const bgRef = useRef(null);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Parallax Background
-      gsap.to(bgRef.current, {
-        y: "15%",
-        ease: "none",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true
+    // 1200ms Performant Buffer: Delay engine startup to secure LCP
+    const timer = setTimeout(() => {
+      let ctx;
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          ctx = gsap.context(() => {
+            // No GSAP parallax here to preserve the original 'bg-fixed' CSS look
+          }, sectionRef);
+        } else {
+          if (ctx) ctx.revert();
         }
-      });
-    }, sectionRef);
+      }, { rootMargin: "100px", threshold: 0.01 });
 
-    return () => ctx.revert();
+      if (sectionRef.current) observer.observe(sectionRef.current);
+      window._valuesObserver = observer;
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+      if (window._valuesObserver) window._valuesObserver.disconnect();
+    };
   }, []);
 
   return (
-    <section ref={sectionRef} className="relative py-16 md:py-24 lg:py-30 mb-16 md:mb-24 lg:mb-32 xl:mb-40 bg-[#0a0a0a] overflow-hidden">
+    <section ref={sectionRef} className="relative py-16 md:py-24 lg:py-30 bg-[url('https://peppy-moonbeam-9fe49c.netlify.app/images/background-img-1.jpeg')] bg-cover bg-center bg-fixed overflow-hidden">
+      <div className="absolute inset-0 bg-[#0a0a0a]/80 z-0 pointer-events-none" />
       
-      {/* Background with Image + Parallax + Dark Overlay */}
-      <div className="absolute inset-0 z-0">
-        <div ref={bgRef} className="absolute -top-[20%] left-0 w-full h-[140%]">
-          <Image
-            src="https://peppy-moonbeam-9fe49c.netlify.app/images/background-img-1.jpeg"
-            alt="Institutional Background"
-            fill
-            className="object-cover opacity-30"
-            sizes="100vw"
-          />
-        </div>
-        {/* Semi-transparent dark overlay to ensure text visibility */}
-        <div className="absolute inset-0 bg-[#0a0a0a]/50 z-10"></div>
-      </div>
+
 
       <div className="container mx-auto px-6 md:px-12 relative z-20">
         

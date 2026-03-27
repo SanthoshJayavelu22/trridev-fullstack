@@ -86,7 +86,13 @@ exports.createService = asyncHandler(async (req, res, next) => {
         const imgIndex = parseInt(parts[2]);
         if (!isNaN(index) && parsedSubProducts[index]) {
           if (!parsedSubProducts[index].gallery) parsedSubProducts[index].gallery = [];
-          parsedSubProducts[index].gallery[imgIndex] = relativePath;
+          
+          // Construct the gallery object. 
+          // Match with any alt text sent from frontend if possible (e.g. subProductGalleryAlt_0_0)
+          const altKey = `subProductGalleryAlt_${index}_${imgIndex}`;
+          const alt = req.body[altKey] || "";
+          
+          parsedSubProducts[index].gallery[imgIndex] = { url: relativePath, alt };
         }
       } else if (file.fieldname.startsWith('sectionImage_')) {
         const index = parseInt(file.fieldname.split('_')[1]);
@@ -230,11 +236,14 @@ exports.updateService = asyncHandler(async (req, res, next) => {
           
           // Cleanup old image if we are replacing it at this specific index
           const oldGallery = service.subProducts[index]?.gallery;
-          if (oldGallery && oldGallery[imgIndex] && oldGallery[imgIndex].includes('uploads/')) {
-            deleteLocalFile(path.join(__dirname, '..', oldGallery[imgIndex]));
+          if (oldGallery && oldGallery[imgIndex] && oldGallery[imgIndex].url && oldGallery[imgIndex].url.includes('uploads/')) {
+            deleteLocalFile(path.join(__dirname, '..', oldGallery[imgIndex].url));
           }
           
-          parsedSubProducts[index].gallery[imgIndex] = relativePath;
+          const altKey = `subProductGalleryAlt_${index}_${imgIndex}`;
+          const alt = req.body[altKey] || "";
+          
+          parsedSubProducts[index].gallery[imgIndex] = { url: relativePath, alt };
         }
       } else if (file.fieldname.startsWith('sectionImage_')) {
         const index = parseInt(file.fieldname.split('_')[1]);

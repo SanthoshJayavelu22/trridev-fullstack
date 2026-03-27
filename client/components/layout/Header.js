@@ -42,7 +42,7 @@ export default function Header() {
     { name: 'Home', href: '/' },
     { name: 'About', href: '/about' },
     { name: 'Capabilities', href: '/capabilities' },
-    { name: 'Services', href: '/#services', hasDropdown: true },
+    { name: 'Services', href: '#', hasDropdown: true },
     { name: 'Export', href: '/export' },
     { name: 'Our Blogs', href: '/blog' },
   ];
@@ -145,13 +145,14 @@ export default function Header() {
             <Image 
               src="/tridev-logo.png" 
               alt="Tridev Labels Logo" 
-              width={180}
-              height={48}
+              width={120}
+              height={28}
               priority
               fetchPriority="high"
               decoding="sync"
-              sizes="(max-width: 768px) 120px, 180px"
-              className={`h-7 sm:h-8 md:h-9 lg:h-10 xl:h-12 w-auto object-contain transition-all duration-500 ${(isScrolled || isMobileMenuOpen) ? 'brightness-100' : ''}`}
+              quality={60}
+              sizes="(max-width: 768px) 100px, 120px"
+              className={`h-7 sm:h-8 md:h-9 lg:h-10 xl:h-12 w-auto h-auto object-contain transition-all duration-500 ${(isScrolled || isMobileMenuOpen) ? 'brightness-100' : ''}`}
             />
           </Link>
 
@@ -174,6 +175,7 @@ export default function Header() {
                   <Link 
                     href={item.href}
                     onMouseEnter={handleMouseEnter}
+                    onClick={(e) => item.hasDropdown && e.preventDefault()}
                     className={`px-3 xl:px-6 py-2 text-[11px] xl:text-[14px] font-medium tracking-[0.15em] uppercase transition-colors duration-300 flex items-center gap-1.5
                       ${isScrolled ? 'text-black/70 hover:text-white' : 'text-white hover:text-white'}
                     `}
@@ -270,7 +272,10 @@ export default function Header() {
                 <div key={item.name} className="flex flex-col items-start w-full group">
                   <Link 
                     href={item.href}
-                    onClick={() => !item.hasDropdown && setIsMobileMenuOpen(false)}
+                    onClick={(e) => {
+                      if (item.hasDropdown) e.preventDefault();
+                      else setIsMobileMenuOpen(false);
+                    }}
                     className="flex items-center gap-6 text-4xl sm:text-5xl md:text-7xl font-bold text-white/20 hover:text-white transition-all duration-500 uppercase tracking-tighter w-full"
                   >
                     <span className="text-xs sm:text-sm font-bold text-[#E32219] w-6">0{idx+1}</span>

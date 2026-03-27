@@ -13,58 +13,74 @@ export default function AboutApproach() {
   const columnsRef = useRef([]);
 
   useEffect(() => {
-    const ctx = gsap.context(() => {
-      // Desktop Parallax Columns
-      if (window.innerWidth >= 1024) {
-        gsap.to(".col-slow", {
-          y: -50,
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true
-          }
-        });
-        
-        gsap.to(".col-medium", {
-          y: -120,
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true
-          }
-        });
+    // 1200ms Performant Buffer: Delay engine startup to secure LCP
+    const timer = setTimeout(() => {
+      let ctx;
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          ctx = gsap.context(() => {
+            // Desktop Parallax Columns
+            if (window.innerWidth >= 1024) {
+               gsap.to(".col-slow", {
+                  y: -50,
+                  ease: "none",
+                  scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                  }
+               });
+               
+               gsap.to(".col-medium", {
+                  y: -120,
+                  ease: "none",
+                  scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                  }
+               });
 
-        gsap.to(".col-fast", {
-          y: -200,
-          ease: "none",
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true
-          }
-        });
-      }
-      
-      // Reveal Animation
-      gsap.from(".approach-card", {
-        y: 50,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 75%"
+               gsap.to(".col-fast", {
+                  y: -200,
+                  ease: "none",
+                  scrollTrigger: {
+                    trigger: containerRef.current,
+                    start: "top bottom",
+                    end: "bottom top",
+                    scrub: true
+                  }
+               });
+            }
+            
+            // Reveal Animation
+            gsap.from(".approach-card", {
+              y: 50,
+              opacity: 0,
+              duration: 1.2,
+              stagger: 0.1,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: containerRef.current,
+                start: "top 75%"
+              }
+            });
+          }, containerRef);
+        } else {
+          if (ctx) ctx.revert();
         }
-      });
+      }, { rootMargin: "100px", threshold: 0.01 });
 
-    }, containerRef);
-    return () => ctx.revert();
+      if (containerRef.current) observer.observe(containerRef.current);
+      window._approachObserver = observer;
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+      if (window._approachObserver) window._approachObserver.disconnect();
+    };
   }, []);
 
   return (
@@ -199,6 +215,7 @@ export default function AboutApproach() {
                    alt="Color Calibration" 
                    fill
                    priority
+                   fetchPriority="high"
                    sizes="(max-width: 768px) 100vw, 33vw"
                    className="w-full h-full object-cover grayscale brightness-90 transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
                 />
@@ -220,6 +237,8 @@ export default function AboutApproach() {
                    src="/label-printing-approach.png" 
                    alt="Industrial Machine" 
                    fill
+                   priority
+                   fetchPriority="high"
                    sizes="(max-width: 768px) 100vw, 33vw"
                    className="w-full h-full object-cover grayscale brightness-90 transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
                 />

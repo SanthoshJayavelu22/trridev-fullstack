@@ -70,22 +70,38 @@ export default function AboutTestimonials() {
 
   useEffect(() => {
     if (loading) return;
-    const ctx = gsap.context(() => {
-      gsap.from(".testimonial-header > *", {
-        y: 30,
-        opacity: 0,
-        duration: 1.2,
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top 80%"
+    // 1200ms Performant Buffer: Delay engine startup to secure LCP
+    const timer = setTimeout(() => {
+      let ctx;
+      const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting) {
+          ctx = gsap.context(() => {
+            gsap.from(".testimonial-header > *", {
+              y: 30,
+              opacity: 0,
+              duration: 1.2,
+              stagger: 0.1,
+              ease: "power3.out",
+              scrollTrigger: {
+                trigger: sectionRef.current,
+                start: "top 80%"
+              }
+            });
+          }, sectionRef);
+        } else {
+          if (ctx) ctx.revert();
         }
-      });
-    }, sectionRef);
+      }, { rootMargin: "100px", threshold: 0.01 });
 
-    return () => ctx.revert();
-  }, []);
+      if (sectionRef.current) observer.observe(sectionRef.current);
+      window._testimonialsObserver = observer;
+    }, 1200);
+
+    return () => {
+      clearTimeout(timer);
+      if (window._testimonialsObserver) window._testimonialsObserver.disconnect();
+    };
+  }, [loading]);
 
   return (
     <section ref={sectionRef} className="relative py-20 md:py-32 bg-gray-50 overflow-hidden">

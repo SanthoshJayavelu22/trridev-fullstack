@@ -25,6 +25,7 @@ const socketHandler = (io) => {
     };
 
     socket.on('join_chat', async (visitorId) => {
+      socket.visitorId = visitorId;
       socket.join(visitorId);
       const chat = await Chat.findOne({ visitorId, status: { $ne: 'closed' } });
       if (chat) socket.emit('chat_history', chat.messages);
@@ -177,8 +178,45 @@ const socketHandler = (io) => {
         socket.to(visitorId).emit('admin_typing', { isTyping: false });
     });
 
-    socket.on('disconnect', () => {
-      console.log(`Socket disconnected: ${socket.id}`.red);
+    socket.on('disconnect', async () => {
+      console.log(`Socket disconnected: ${socket.id}`);
+      if (socket.visitorId) {
+        try {
+            const chat = await Chat.findOne({ visitorId: socket.visitorId, status: { $ne: 'closed' } });
+            if (chat) {
+                // Add a system note that the user has left
+                chat.messages.push({
+                    sender: 'bot',
+                    text: 'User has closed the tab or left the website.',
+                    timestamp: new Date()
+                });
+                await chat.save();
+                io.to('admin_room').emit('chat_updated', chat);
+                io.to('admin_room').emit('visitor_stop_typing', { visitorId: socket.visitorId });
+
+                // Auto-close session after 5 minutes of being disconnected
+                setTimeout(async () => {
+                    try {
+                        const pendingChat = await Chat.findOne({ visitorId: socket.visitorId, status: { $ne: 'closed' } });
+                        if (pendingChat) {
+                            pendingChat.status = 'closed';
+                            pendingChat.messages.push({
+                                sender: 'bot',
+                                text: 'Session automatically closed after 5 minutes of user absence.',
+                                timestamp: new Date()
+                            });
+                            await pendingChat.save();
+                            io.to('admin_room').emit('chat_updated', pendingChat);
+                        }
+                    } catch (err) {
+                        console.error('Error auto-closing chat:', err);
+                    }
+                }, 5 * 60 * 1000); // 5 minutes
+            }
+        } catch (err) {
+            console.error('Error on disconnect:', err);
+        }
+      }
     });
   });
 };

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import ReactDOM from 'react-dom';
 if (typeof window !== 'undefined' && !ReactDOM.findDOMNode) {
@@ -30,8 +30,8 @@ import {
   ArrowLeft
 } from "lucide-react";
 import dynamic from 'next/dynamic';
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
-import "react-quill/dist/quill.snow.css";
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+import "react-quill-new/dist/quill.snow.css";
 import { cn } from '@/components/admin/utils/cn';
 import { getImgUrl } from '@/components/admin/utils/image-url';
 import {
@@ -223,6 +223,8 @@ const ServicesPage = () => {
   const [editingId, setEditingId] = useState(null);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [modalType, setModalType] = useState("success");
+  const [modalTitle, setModalTitle] = useState("Success!");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState(null);
@@ -352,8 +354,21 @@ const ServicesPage = () => {
   const handleFileChange = (e, fieldName) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setModalType("error");
+        setModalTitle("Invalid Format");
+        setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) {
-        setError("Image size should be less than 5MB");
+        setModalType("error");
+        setModalTitle("File Too Large");
+        setSuccessMessage("Image size should be less than 5MB");
+        setShowSuccessModal(true);
+        e.target.value = "";
         return;
       }
       const reader = new FileReader();
@@ -383,8 +398,21 @@ const ServicesPage = () => {
   const handleSubProductFileChange = (index, e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setModalType("error");
+        setModalTitle("Invalid Format");
+        setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) {
-        setError("Image size should be less than 5MB");
+        setModalType("error");
+        setModalTitle("File Too Large");
+        setSuccessMessage("Image size should be less than 5MB");
+        setShowSuccessModal(true);
+        e.target.value = "";
         return;
       }
       const reader = new FileReader();
@@ -467,8 +495,21 @@ const ServicesPage = () => {
   const handleSectionFileChange = (index, e) => {
     const file = e.target.files[0];
     if (file) {
+      const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        setModalType("error");
+        setModalTitle("Invalid Format");
+        setSuccessMessage("Only images (jpeg, jpg, png, gif, webp) are allowed!");
+        setShowSuccessModal(true);
+        e.target.value = "";
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) {
-        setError("Image size should be less than 5MB");
+        setModalType("error");
+        setModalTitle("File Too Large");
+        setSuccessMessage("Image size should be less than 5MB");
+        setShowSuccessModal(true);
+        e.target.value = "";
         return;
       }
       const reader = new FileReader();
@@ -554,6 +595,18 @@ const ServicesPage = () => {
 
   const handleSubProductGalleryChange = (subIndex, e) => {
     const files = Array.from(e.target.files);
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif", "image/webp"];
+    const invalidFiles = files.filter(file => !allowedTypes.includes(file.type));
+    
+    if (invalidFiles.length > 0) {
+      setModalType("error");
+      setModalTitle("Invalid Format");
+      setSuccessMessage("Some files are not allowed. Only jpeg, jpg, png, gif, webp are allowed!");
+      setShowSuccessModal(true);
+      e.target.value = "";
+      return;
+    }
+
     if (files.length > 0) {
       const updated = Array.from(newService.subProducts);
       const newGalleryFiles = files.map(file => ({
@@ -710,8 +763,13 @@ const ServicesPage = () => {
       newService.subProducts.forEach((sub, index) => {
         if (sub.imageFile) formData.append(`subProductImage_${index}`, sub.imageFile);
         if (sub.galleryFiles && sub.galleryFiles.length > 0) {
+          const startIndex = (sub.gallery || []).length;
           sub.galleryFiles.forEach((gf, imgIndex) => {
-            if (gf.file) formData.append(`subProductGallery_${index}_${imgIndex}`, gf.file);
+            if (gf.file) {
+              const actualIndex = startIndex + imgIndex;
+              formData.append(`subProductGallery_${index}_${actualIndex}`, gf.file);
+              formData.append(`subProductGalleryAlt_${index}_${actualIndex}`, gf.alt || "");
+            }
           });
         }
       });
@@ -726,13 +784,20 @@ const ServicesPage = () => {
         await serviceService.create(formData);
       }
 
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage(editingId ? "Service updated successfully!" : "Service created successfully!");
       fetchServices();
       clearForm();
       setShowSuccessModal(true);
     } catch (err) {
       console.error("Error saving service:", err);
-      setError(err.response?.data?.message || "Failed to save service");
+      const msg = err.response?.data?.error || err.response?.data?.message || "Failed to save service";
+      setModalType("error");
+      setModalTitle("Transmission Interrupted");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -810,11 +875,18 @@ const ServicesPage = () => {
       if (editingId === serviceToDelete) clearForm();
       setShowDeleteModal(false);
       setServiceToDelete(null);
+      setModalType("success");
+      setModalTitle("Success!");
       setSuccessMessage("Service deleted successfully!");
       setShowSuccessModal(true);
     } catch (err) {
       console.error("ServicesPage: Delete failed:", err);
-      setError(err.message || "Failed to delete service");
+      const msg = err.response?.data?.error || err.response?.data?.message || "Failed to delete service";
+      setModalType("error");
+      setModalTitle("Delete Failed");
+      setSuccessMessage(msg);
+      setShowSuccessModal(true);
+      setError(msg);
       setShowDeleteModal(false);
     }
   };
@@ -837,8 +909,9 @@ const ServicesPage = () => {
       <SuccessModal
         isOpen={showSuccessModal}
         onClose={() => setShowSuccessModal(false)}
-        title="Success!"
+        title={modalTitle}
         message={successMessage}
+        type={modalType}
       />
 
       <div className="space-y-8">
@@ -1079,7 +1152,8 @@ const ServicesPage = () => {
                               </div>
                               
                               <div className="relative group perspective-1000">
-                                <input type="file" id="heroImage" accept="image/*" onChange={(e) => handleFileChange(e, "heroImage")} className="hidden" />
+                                <div className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Allowed: jpeg, png, webp, gif</div>
+                                <input type="file" id="heroImage" accept=".jpg,.jpeg,.png,.gif,.webp" onChange={(e) => handleFileChange(e, "heroImage")} className="hidden" />
                                 <label 
                                     htmlFor="heroImage" 
                                     className={cn(
@@ -1128,7 +1202,8 @@ const ServicesPage = () => {
                               </div>
                               
                               <div className="relative group perspective-1000">
-                                <input type="file" id="cardImage" accept="image/*" onChange={(e) => handleFileChange(e, "cardImage")} className="hidden" />
+                                <div className="text-[10px] text-slate-400 mt-1 uppercase font-bold tracking-widest">Allowed: jpeg, png, webp, gif</div>
+                                <input type="file" id="cardImage" accept=".jpg,.jpeg,.png,.gif,.webp" onChange={(e) => handleFileChange(e, "cardImage")} className="hidden" />
                                 <label 
                                     htmlFor="cardImage" 
                                     className={cn(
@@ -1207,7 +1282,7 @@ const ServicesPage = () => {
                                            <Pencil size={18} />
                                         </button>
                                      </div>
-                                      <input type="file" id={`subProduct-${i}`} accept="image/*" onChange={(e) => handleSubProductFileChange(i, e)} className="hidden" />
+                                      <input type="file" id={`subProduct-${i}`} accept=".jpg,.jpeg,.png,.gif,.webp" onChange={(e) => handleSubProductFileChange(i, e)} className="hidden" />
                                   </div>
 
                                   {/* Content */}
@@ -1317,7 +1392,7 @@ const ServicesPage = () => {
                                       </div>
                                       <div className="flex gap-4 items-start">
                                         <label className={`size-32 rounded-3xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all ${sub.imagePreview || sub.image ? 'border-orange-500 bg-orange-50/10' : 'border-slate-200 hover:border-orange-400'}`}>
-                                          <input type="file" onChange={(e) => handleSubProductFileChange(i, e)} className="hidden" accept="image/*" />
+                                          <input type="file" onChange={(e) => handleSubProductFileChange(i, e)} className="hidden" accept=".jpg,.jpeg,.png,.gif,.webp" />
                                           {sub.imagePreview || sub.image ? (
                                             <img src={getImgUrl(sub.imagePreview) || getImgUrl(sub.image)} className="w-full h-full object-cover rounded-[1.2rem]" />
                                           ) : (
@@ -1632,7 +1707,7 @@ const ServicesPage = () => {
                                       ))}
                                       {/* Upload button */}
                                       <label className={`aspect-video flex flex-col items-center justify-center border-2 border-dashed rounded-2xl cursor-pointer hover:border-purple-400 hover:bg-purple-50/10 transition-all ${showEmptyWarnings && (!sub.gallery?.length && !sub.galleryFiles?.length) ? 'border-yellow-300 bg-yellow-50/10' : 'border-slate-200'}`}>
-                                        <input type="file" multiple accept="image/*" onChange={(e) => handleSubProductGalleryChange(i, e)} className="hidden" />
+                                        <input type="file" multiple accept=".jpg,.jpeg,.png,.gif,.webp" onChange={(e) => handleSubProductGalleryChange(i, e)} className="hidden" />
                                         <Plus size={24} className="text-slate-300 mb-2" />
                                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Add Gallery Images</span>
                                       </label>
@@ -1688,7 +1763,7 @@ const ServicesPage = () => {
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                                       <div className="md:col-span-3"><ReactQuill value={section.content} onChange={(v) => handleSectionChange(i, "content", v)} modules={quillModules} className="bg-slate-50 rounded-xl overflow-hidden" theme="snow" /></div>
                                       <div className="space-y-4">
-                                        <input type="file" id={`section-${i}`} accept="image/*" onChange={(e) => handleSectionFileChange(i, e)} className="hidden" />
+                                        <input type="file" id={`section-${i}`} accept=".jpg,.jpeg,.png,.gif,.webp" onChange={(e) => handleSectionFileChange(i, e)} className="hidden" />
                                         <label htmlFor={`section-${i}`} className="block aspect-square bg-slate-50 border border-slate-200 rounded-2xl cursor-pointer overflow-hidden">{section.imagePreview || section.image ? <img src={getImgUrl(section.imagePreview) || getImgUrl(section.image)} className="w-full h-full object-cover" /> : <div className="flex items-center justify-center h-full"><Upload className="w-8 h-8 text-slate-300" /></div>}</label>
                                         <input type="text" placeholder="Media Alt Text" value={section.imageAlt} onChange={(e) => handleSectionChange(i, "imageAlt", e.target.value)} className="admin-input-field text-[10px]" />
                                       </div>

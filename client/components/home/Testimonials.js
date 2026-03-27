@@ -6,7 +6,7 @@ import { ChevronLeft, ChevronRight, Quote, Star, ShieldCheck } from 'lucide-reac
 import Image from 'next/image';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { getImgUrl } from '@/utils/image-url';
+import { getImgUrl, isLocalImage } from '@/utils/image-url';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -71,22 +71,35 @@ export default function Testimonials() {
   useEffect(() => {
     if (loading) return;
 
-    const ctx = gsap.context(() => {
-      // Elegant Fade Up for headers
-      gsap.from(".testimonial-reveal", {
-        y: 40,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: containerRef.current,
-          start: "top 80%"
-        }
-      });
-    }, containerRef);
+    // Viewport-based lazy initialization for elite TBT
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        const ctx = gsap.context(() => {
+          // Elegant Fade Up for headers
+          gsap.from(".testimonial-reveal", {
+            y: 40,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: "top 80%"
+            }
+          });
+        }, containerRef);
+        
+        window._testimonialCtx = ctx;
+        observer.disconnect();
+      }
+    }, { rootMargin: "200px" });
 
-    return () => ctx.revert();
+    if (containerRef.current) observer.observe(containerRef.current);
+
+    return () => {
+      if (window._testimonialCtx) window._testimonialCtx.revert();
+      observer.disconnect();
+    };
   }, [loading]);
 
   const paginate = (newDirection) => {
@@ -170,8 +183,9 @@ export default function Testimonials() {
                         <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-white shadow-md bg-gray-100">
                           <Image 
                             src={getImgUrl(testimonials[current].image)} 
-                            alt={testimonials[current].author}
+                            alt={testimonials[current].author || "Client Testimonial"}
                             fill
+                            unoptimized={isLocalImage(getImgUrl(testimonials[current].image))}
                             className="object-cover"
                           />
                         </div>
@@ -204,8 +218,9 @@ export default function Testimonials() {
                   >
                     <Image 
                       src={getImgUrl(testimonials[current].image)} 
-                      alt={testimonials[current].author}
+                      alt={testimonials[current].author || "Client Testimonial"}
                       fill
+                      unoptimized={isLocalImage(getImgUrl(testimonials[current].image))}
                       className="object-cover"
                     />
                     {/* Industrial Tint Overlay */}

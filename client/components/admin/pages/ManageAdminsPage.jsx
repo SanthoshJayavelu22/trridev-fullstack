@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { User, Mail, Plus, Trash2, ArrowRight, ShieldCheck, Loader2 } from "lucide-react";
@@ -11,9 +11,18 @@ const ManageAdminsPage = () => {
   const [creating, setCreating] = useState(false);
   const [newAdmin, setNewAdmin] = useState({ name: "", email: "", password: "" });
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
+  const [currentUser, setCurrentUser] = useState({});
 
   useEffect(() => {
     fetchAdmins();
+    const user = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+    if (user) {
+      try {
+        setCurrentUser(JSON.parse(user));
+      } catch (err) {
+        console.error("Failed to parse user from local storage", err);
+      }
+    }
   }, []);
 
   const showToast = (message, type = "success") => {
@@ -76,7 +85,7 @@ const ManageAdminsPage = () => {
     }
   };
 
-  const currentUser = JSON.parse((typeof window !== "undefined" ? (typeof window !== "undefined" ? localStorage.getItem("user") : null) : null) || "{}");
+
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">

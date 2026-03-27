@@ -10,7 +10,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { galleryService } from '@/services/gallery.service';
 import SectionLoader from '@/components/common/SectionLoader';
 
-import { getImgUrl } from '@/utils/image-url';
+import { getImgUrl, isLocalImage } from '@/utils/image-url';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -47,34 +47,48 @@ export default function FinishesGallery() {
   useEffect(() => {
     if (loading || finishes.length === 0) return;
 
-    const ctx = gsap.context(() => {
-      // Header entrance
-      gsap.from(headerRef.current.children, {
-        y: 30,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.1,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: headerRef.current,
-          start: "top 85%"
-        }
-      });
+    // Viewport-based lazy initialization for elite TBT
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting) {
+        const ctx = gsap.context(() => {
+          // Header entrance
+          gsap.from(headerRef.current.children, {
+            y: 30,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: headerRef.current,
+              start: "top 85%"
+            }
+          });
 
-      // Gallery stagger entrance
-      gsap.from(".finish-card", {
-        x: 40,
-        opacity: 0,
-        duration: 1,
-        stagger: 0.2,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: ".finish-grid",
-          start: "top 85%"
-        }
-      });
-    }, containerRef);
-    return () => ctx.revert();
+          // Gallery stagger entrance
+          gsap.from(".finish-card", {
+            x: 40,
+            opacity: 0,
+            duration: 1,
+            stagger: 0.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".finish-grid",
+              start: "top 85%"
+            }
+          });
+        }, containerRef);
+        
+        window._galleryCtx = ctx;
+        observer.disconnect(); // Only run initialization once
+      }
+    }, { rootMargin: "200px" });
+
+    if (containerRef.current) observer.observe(containerRef.current);
+
+    return () => {
+      if (window._galleryCtx) window._galleryCtx.revert();
+      observer.disconnect();
+    };
   }, [loading, finishes]);
 
   return (
@@ -116,6 +130,7 @@ export default function FinishesGallery() {
                     alt={finish.name}
                     fill
                     loading="lazy"
+                    unoptimized={isLocalImage(getImgUrl(finish.image))}
                     sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 300px"
                     className="w-full h-full object-cover grayscale brightness-90 group-hover:grayscale-0 group-hover:brightness-100 group-hover:scale-110 transition-all duration-1000"
                   />

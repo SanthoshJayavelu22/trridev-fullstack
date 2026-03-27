@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getImgUrl } from '@/utils/image-url';
+import { sanitizeRichText } from '@/utils/rich-text';
 import { 
   ArrowRight, 
   ShieldCheck, 
@@ -351,13 +352,13 @@ export default function SubProductDetail({ service, subProduct }) {
                 </div>
                 
                 <div 
-                  className="prose prose-lg md:prose-xl prose-gray max-w-none
+                  className="rich-text-content prose prose-lg md:prose-xl prose-gray max-w-none
                            prose-headings:text-gray-900 prose-headings:font-medium prose-headings:tracking-tight
                            prose-p:text-gray-700 prose-p:leading-[1.75] prose-p:mb-6 prose-p:font-light
                            prose-strong:text-gray-950 prose-strong:font-medium
                            prose-a:text-[#E32219] prose-a:no-underline hover:prose-a:underline
                            prose-img:rounded-3xl prose-img:my-6"
-                  dangerouslySetInnerHTML={{ __html: subProduct.fullDescription }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeRichText(subProduct.fullDescription) }}
                 />
               </div>
             )}

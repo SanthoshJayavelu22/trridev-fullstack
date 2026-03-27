@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import { getImgUrl, isLocalImage } from '@/utils/image-url';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -87,9 +88,10 @@ export default function BlogListingClient({ initialBlogs, initialPage, totalPage
                      {/* High-End Image Container */}
                      <div className="relative aspect-16/10 overflow-hidden rounded-2xl bg-gray-50 shadow-xl shadow-black/3 mb-8">
                         <Image 
-                          src={blog.featuredImage || "https://images.unsplash.com/photo-1557804506-669a67965ba0"} 
+                          src={getImgUrl(blog.featuredImage) || "https://images.unsplash.com/photo-1557804506-669a67965ba0"} 
                           alt={blog.cardTitle || blog.title} 
                           fill
+                          unoptimized={isLocalImage(getImgUrl(blog.featuredImage))}
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover brightness-95 group-hover:brightness-105 group-hover:scale-110 transition-all duration-1000"
                         />

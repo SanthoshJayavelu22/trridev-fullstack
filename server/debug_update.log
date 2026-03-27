@@ -103,3 +103,17 @@ Raw subProducts: [{"title":"Barcode Labels","slug":"barcode-labels","subtitle":"
 Parsed subProducts count: 7
 Sample [0] keys: title, slug, subtitle, desc, fullDescription, metaTitle, metaDescription, features, specifications, applications, benefits, faqs, sections, image, imageAlt, gallery, _id
 Sample [0] fullDescription length: 1203
+--- Update Service Debug (ID: 69c4df5b5f2133274cb2d926) ---
+Time: 2026-03-26T07:27:43.292Z
+Body Keys: isActive, title, slug, subtitle, description, metaTitle, metaDescription, subProducts, specs, applications, sections, faqs, category, tags, layout, extraContent, heroImageAlt, cardImageAlt
+Raw subProducts: [{"title":"dasdas d asd asd  asd sa d sa  ds  sdadasdas d asd asdasd","slug":"dasdas-d-asd-asd-asd-sa-d-sa-ds-sdadasdas-d-asd-asdasd","subtitle":"asd asda dasd asddasd sda sdsa","desc":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ornare tempus aliquet. Pellentesque finibus, est et iaculis suscipit, dolor nulla commodo dui, nec ultricies arcu nisl tristique eros. Morbi eros est, pulvinar eget ornare ac, ultrices eget risus. Ut lobortis pellentesque pretium. Praesent sollicitudi...
+Parsed subProducts count: 1
+Sample [0] keys: title, slug, subtitle, desc, fullDescription, metaTitle, metaDescription, features, specifications, applications, benefits, faqs, sections, image, imageAlt, gallery, _id
+Sample [0] fullDescription length: 3510
+--- Update Service Debug (ID: 69c4df5b5f2133274cb2d926) ---
+Time: 2026-03-26T07:43:19.077Z
+Body Keys: isActive, title, slug, subtitle, description, metaTitle, metaDescription, subProducts, specs, applications, sections, faqs, category, tags, layout, extraContent, heroImageAlt, cardImageAlt
+Raw subProducts: [{"title":"dasdas d asd asd  asd sa d sa  ds  sdadasdas d asd asdasd","slug":"dasdas-d-asd-asd-asd-sa-d-sa-ds-sdadasdas-d-asd-asdasd","subtitle":"asd asda dasd asddasd sda sdsa","desc":"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Etiam ornare tempus aliquet. Pellentesque finibus, est et iaculis suscipit, dolor nulla commodo dui, nec ultricies arcu nisl tristique eros. Morbi eros est, pulvinar eget ornare ac, ultrices eget risus. Ut lobortis pellentesque pretium. Praesent sollicitudi...
+Parsed subProducts count: 1
+Sample [0] keys: title, slug, subtitle, desc, fullDescription, metaTitle, metaDescription, features, specifications, applications, benefits, faqs, sections, image, imageAlt, gallery, _id
+Sample [0] fullDescription length: 3510
